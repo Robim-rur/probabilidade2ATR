@@ -19,21 +19,131 @@ st.set_page_config(
 # =========================================================
 
 ATIVOS = [
-    "BBAS3.SA","ITUB4.SA","ITSA4.SA","BBDC4.SA","BBDC3.SA",
-    "SANB11.SA","BPAC11.SA","BRSR6.SA","BMGB4.SA",
-    "PETR4.SA","PETR3.SA","PRIO3.SA","RECV3.SA","RRRP3.SA",
-    "VALE3.SA","CSNA3.SA","GGBR4.SA","USIM5.SA",
-    "LREN3.SA","MGLU3.SA","ARZZ3.SA","ALOS3.SA",
-    "WEGE3.SA","EMBR3.SA","TUPY3.SA",
-    "PSSA3.SA","CXSE3.SA",
-    "TAEE11.SA","EGIE3.SA","CPLE6.SA","ELET3.SA",
-    "BOVA11.SA","SMAL11.SA","IVVB11.SA",
-    "AAPL34.SA","MSFT34.SA","GOGL34.SA","AMZO34.SA"
+       "GARE11.SA",
+        "HGLG11.SA",
+        "XPLG11.SA",
+        "VILG11.SA",
+        "BRCO11.SA",
+        "BTLG11.SA",
+        "XPML11.SA",
+        "VISC11.SA",
+        "HSML11.SA",
+        "MALL11.SA",
+        "KNRI11.SA",
+        "JSRE11.SA",
+        "PVBI11.SA",
+        "HGRE11.SA",
+        "MXRF11.SA",
+        "KNCR11.SA",
+        "KNIP11.SA",
+        "CPTS11.SA",
+        "IRDM11.SA",
+        "TGAR11.SA",
+        "TRXF11.SA",
+        "HGRU11.SA",
+        "ALZR11.SA",
+        "XPCA11.SA",
+        "VGIA11.SA",
+        "RBRR11.SA",
+        "KNSC11.SA",
+        "HGCR11.SA",
+        "MCCI11.SA",
+        "RECR11.SA",
+        "VRTA11.SA",
+        "BCFF11.SA",
+        "HFOF11.SA",
+        "XPSF11.SA",
+        "RBRP11.SA",
+        "RBRF11.SA",
+        "RZTR11.SA",
+        "RURA11.SA",
+        "VGIR11.SA",
+        "CVBI11.SA",
+        "UTLL11.SA",
+        "GGRC11.SA",
+        "AUVP11.SA",
+        "IEEX11.SA"
+    ],
+
+    "Utilities": [
+
+        "TAEE11.SA",
+        "CMIG4.SA",
+        "CPFE3.SA",
+        "EQTL3.SA",
+        "ELET3.SA",
+        "ELET6.SA",
+        "ALUP11.SA",
+        "TRPL4.SA",
+        "NEOE3.SA",
+        "ENGI11.SA",
+        "SBSP3.SA",
+        "SAPR11.SA",
+        "CSMG3.SA"
+    ],
+
+    "Bancos": [
+
+        "BBAS3.SA",
+        "ITUB4.SA",
+        "ITSA4.SA",
+        "BBDC4.SA",
+        "BBDC3.SA",
+        "SANB11.SA",
+        "BPAC11.SA",
+        "BRSR6.SA"
+    ],
+
+    "Blue Chips": [
+
+        "VALE3.SA",
+        "PETR4.SA",
+        "PETR3.SA",
+        "WEGE3.SA",
+        "SUZB3.SA",
+        "KLBN11.SA",
+        "JBSS3.SA",
+        "PRIO3.SA",
+        "RECV3.SA",
+        "EGIE3.SA",
+        "VIVT3.SA",
+        "TOTS3.SA",
+        "RAIL3.SA"
+    ],
+
+    "BDRs": [
+
+        "AAPL34.SA",
+        "MSFT34.SA",
+        "GOGL34.SA",
+        "AMZO34.SA",
+        "META34.SA",
+        "NVDC34.SA",
+        "JPMC34.SA",
+        "DISB34.SA",
+        "SBUX34.SA"
+    ],
+
+    "ETFs": [
+
+        "BOVA11.SA",
+        "SMAL11.SA",
+        "IVVB11.SA",
+        "DIVO11.SA"
+    ]
 ]
 
 # =========================================================
 # FUNÇÕES
 # =========================================================
+
+def ajustar_colunas(df):
+
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = df.columns.get_level_values(0)
+
+    return df
+
 
 def calcular_indicadores(df):
 
@@ -65,7 +175,10 @@ def calcular_indicadores(df):
     df["ATR"] = atr.average_true_range()
 
     df["VOL_MEDIA20"] = df["Volume"].rolling(20).mean()
-    df["VOL_REL"] = df["Volume"] / df["VOL_MEDIA20"]
+
+    df["VOL_REL"] = (
+        df["Volume"] / df["VOL_MEDIA20"]
+    )
 
     return df
 
@@ -74,10 +187,12 @@ def tendencia_ok(df):
 
     ultimo = df.iloc[-1]
 
-    return (
-        ultimo["Close"] > ultimo["EMA169"] and
-        ultimo["DI_POS"] > ultimo["DI_NEG"]
+    condicao = (
+        (ultimo["Close"] > ultimo["EMA169"]) and
+        (ultimo["DI_POS"] > ultimo["DI_NEG"])
     )
+
+    return bool(condicao)
 
 
 def tendencia_semanal_ok(df_diario):
@@ -97,17 +212,19 @@ def tendencia_semanal_ok(df_diario):
 
     ultimo = semanal.iloc[-1]
 
-    return (
-        ultimo["Close"] > ultimo["EMA169"] and
-        ultimo["DI_POS"] > ultimo["DI_NEG"]
+    condicao = (
+        (ultimo["Close"] > ultimo["EMA169"]) and
+        (ultimo["DI_POS"] > ultimo["DI_NEG"])
     )
+
+    return bool(condicao)
 
 
 def volume_ok(df):
 
     ultimo = df.iloc[-1]
 
-    return ultimo["VOL_REL"] > 1
+    return bool(ultimo["VOL_REL"] > 1)
 
 
 def detectar_123_compra(df):
@@ -125,9 +242,16 @@ def detectar_123_compra(df):
     if ponto1_idx >= 8:
         return False
 
-    ponto2_idx = ponto1_idx + np.argmax(
-        highs[ponto1_idx + 1:15]
-    ) + 1
+    trecho_p2 = highs[ponto1_idx + 1:15]
+
+    if len(trecho_p2) == 0:
+        return False
+
+    ponto2_idx = (
+        ponto1_idx +
+        np.argmax(trecho_p2) +
+        1
+    )
 
     if ponto2_idx <= ponto1_idx:
         return False
@@ -138,7 +262,12 @@ def detectar_123_compra(df):
         return False
 
     ponto3_rel = np.argmin(trecho3)
-    ponto3_idx = ponto2_idx + 1 + ponto3_rel
+
+    ponto3_idx = (
+        ponto2_idx +
+        1 +
+        ponto3_rel
+    )
 
     low1 = lows[ponto1_idx]
     low3 = lows[ponto3_idx]
@@ -147,18 +276,25 @@ def detectar_123_compra(df):
         return False
 
     topo2 = highs[ponto2_idx]
-    fechamento = dados["Close"].iloc[-1]
+
+    fechamento = float(
+        dados["Close"].iloc[-1]
+    )
 
     rompimento = fechamento > topo2
 
-    return rompimento
+    return bool(rompimento)
 
 
 def calcular_liquidez(df):
 
-    financeiro = df["Close"] * df["Volume"]
+    financeiro = (
+        df["Close"] * df["Volume"]
+    )
 
-    return financeiro.tail(20).mean()
+    return float(
+        financeiro.tail(20).mean()
+    )
 
 
 def backtest_probabilidade(df):
@@ -171,45 +307,56 @@ def backtest_probabilidade(df):
 
         trecho = df.iloc[:i].copy()
 
-        if not tendencia_ok(trecho):
+        try:
+
+            if not tendencia_ok(trecho):
+                continue
+
+            if not volume_ok(trecho):
+                continue
+
+            if not detectar_123_compra(trecho):
+                continue
+
+            entrada = float(
+                trecho.iloc[-1]["Close"]
+            )
+
+            atr = float(
+                trecho.iloc[-1]["ATR"]
+            )
+
+            stop = entrada - atr
+            alvo = entrada + (2 * atr)
+
+            futuro = df.iloc[i:i + 15]
+
+            resultado = None
+
+            for _, candle in futuro.iterrows():
+
+                low = float(candle["Low"])
+                high = float(candle["High"])
+
+                if low <= stop:
+                    resultado = "loss"
+                    break
+
+                if high >= alvo:
+                    resultado = "gain"
+                    break
+
+            if resultado is not None:
+
+                ocorrencias += 1
+
+                if resultado == "gain":
+                    gains += 1
+                else:
+                    losses += 1
+
+        except:
             continue
-
-        if not volume_ok(trecho):
-            continue
-
-        padrao = detectar_123_compra(trecho)
-
-        if not padrao:
-            continue
-
-        entrada = trecho.iloc[-1]["Close"]
-        atr = trecho.iloc[-1]["ATR"]
-
-        stop = entrada - atr
-        alvo = entrada + (2 * atr)
-
-        futuro = df.iloc[i:i + 15]
-
-        resultado = None
-
-        for _, candle in futuro.iterrows():
-
-            if candle["Low"] <= stop:
-                resultado = "loss"
-                break
-
-            if candle["High"] >= alvo:
-                resultado = "gain"
-                break
-
-        if resultado is not None:
-
-            ocorrencias += 1
-
-            if resultado == "gain":
-                gains += 1
-            else:
-                losses += 1
 
     if ocorrencias == 0:
         return 0, 0, 0, 0
@@ -276,7 +423,6 @@ def criar_grafico(df, ticker):
 
     return fig
 
-
 # =========================================================
 # INTERFACE
 # =========================================================
@@ -303,6 +449,7 @@ if st.button("ESCANEAR MERCADO"):
     resultados = []
 
     progresso = st.progress(0)
+
     status = st.empty()
 
     total = len(ATIVOS)
@@ -311,7 +458,9 @@ if st.button("ESCANEAR MERCADO"):
 
         try:
 
-            status.text(f"Analisando {ticker}...")
+            status.text(
+                f"Analisando {ticker}..."
+            )
 
             df = yf.download(
                 ticker,
@@ -324,6 +473,8 @@ if st.button("ESCANEAR MERCADO"):
             if df.empty:
                 continue
 
+            df = ajustar_colunas(df)
+
             if len(df) < 300:
                 continue
 
@@ -333,7 +484,11 @@ if st.button("ESCANEAR MERCADO"):
                 continue
 
             df = calcular_indicadores(df)
+
             df.dropna(inplace=True)
+
+            if len(df) < 250:
+                continue
 
             if not tendencia_ok(df):
                 continue
@@ -359,53 +514,109 @@ if st.button("ESCANEAR MERCADO"):
 
             ultimo = df.iloc[-1]
 
-            entrada = round(ultimo["Close"], 2)
-            atr = round(ultimo["ATR"], 2)
+            entrada = round(
+                float(ultimo["Close"]),
+                2
+            )
 
-            stop = round(entrada - atr, 2)
-            alvo = round(entrada + (2 * atr), 2)
+            atr = round(
+                float(ultimo["ATR"]),
+                2
+            )
+
+            stop = round(
+                entrada - atr,
+                2
+            )
+
+            alvo = round(
+                entrada + (2 * atr),
+                2
+            )
 
             score = gerar_score(
                 probabilidade,
-                ultimo["VOL_REL"],
+                float(ultimo["VOL_REL"]),
                 expectativa
             )
 
             resultados.append({
-                "Ativo": ticker.replace(".SA", ""),
-                "Probabilidade": probabilidade,
-                "Ocorrências": ocorrencias,
-                "Gains": gains,
-                "Expectativa": expectativa,
-                "Volume": round(ultimo["VOL_REL"], 2),
-                "ATR": atr,
-                "Entrada": entrada,
-                "Stop": stop,
-                "Alvo": alvo,
-                "Score": score,
-                "Grafico": df.tail(200)
+
+                "Ativo":
+                    ticker.replace(".SA", ""),
+
+                "Probabilidade":
+                    probabilidade,
+
+                "Ocorrências":
+                    ocorrencias,
+
+                "Gains":
+                    gains,
+
+                "Expectativa":
+                    expectativa,
+
+                "Volume":
+                    round(
+                        float(
+                            ultimo["VOL_REL"]
+                        ),
+                        2
+                    ),
+
+                "ATR":
+                    atr,
+
+                "Entrada":
+                    entrada,
+
+                "Stop":
+                    stop,
+
+                "Alvo":
+                    alvo,
+
+                "Score":
+                    score,
+
+                "Grafico":
+                    df.tail(200)
+
             })
 
         except Exception as e:
 
-            st.warning(f"Erro em {ticker}: {e}")
+            st.warning(
+                f"Erro em {ticker}: {e}"
+            )
 
-        progresso.progress((i + 1) / total)
+        progresso.progress(
+            (i + 1) / total
+        )
 
     status.text("Análise concluída.")
 
     if len(resultados) == 0:
 
-        st.error("Nenhum ativo encontrado.")
+        st.error(
+            "Nenhum ativo encontrado."
+        )
 
     else:
 
-        resultados_df = pd.DataFrame(resultados)
+        resultados_df = pd.DataFrame(
+            resultados
+        )
 
-        resultados_df = resultados_df.sort_values(
-            by="Score",
-            ascending=False
-        ).reset_index(drop=True)
+        resultados_df = (
+            resultados_df
+            .sort_values(
+                by="Score",
+                ascending=False
+            )
+            .reset_index(drop=True)
+        )
 
         resultados_df.index += 1
 
@@ -425,15 +636,23 @@ if st.button("ESCANEAR MERCADO"):
 
         st.divider()
 
-        st.subheader("DETALHAMENTO DOS ATIVOS")
+        st.subheader(
+            "DETALHAMENTO DOS ATIVOS"
+        )
 
-        for rank, linha in resultados_df.iterrows():
+        for rank, linha in (
+            resultados_df.iterrows()
+        ):
 
             with st.expander(
-                f"#{rank} - {linha['Ativo']} | Score {linha['Score']}"
+                f"#{rank} - "
+                f"{linha['Ativo']} | "
+                f"Score {linha['Score']}"
             ):
 
-                col1, col2, col3 = st.columns(3)
+                col1, col2, col3 = (
+                    st.columns(3)
+                )
 
                 with col1:
 
@@ -472,11 +691,13 @@ if st.button("ESCANEAR MERCADO"):
                     )
 
                 st.write(
-                    f"Ocorrências históricas: {linha['Ocorrências']}"
+                    f"Ocorrências históricas: "
+                    f"{linha['Ocorrências']}"
                 )
 
                 st.write(
-                    f"Gains antes do stop: {linha['Gains']}"
+                    f"Gains antes do stop: "
+                    f"{linha['Gains']}"
                 )
 
                 fig = criar_grafico(
@@ -492,5 +713,6 @@ if st.button("ESCANEAR MERCADO"):
 st.divider()
 
 st.caption(
-    "Scanner Probabilístico B3 | EMA169 + DMI + ATR"
+    "Scanner Probabilístico B3 "
+    "| EMA169 + DMI + ATR"
 )
