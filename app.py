@@ -1,26 +1,8 @@
-# requirements.txt
-
-```txt
-streamlit==1.45.1
-pandas==2.2.3
-numpy==2.2.5
-yfinance==0.2.61
-plotly==6.0.1
-ta==0.11.0
-scipy==1.15.3
-```
-
----
-
-# app.py
-
-```python
 import streamlit as st
 import pandas as pd
 import numpy as np
 import yfinance as yf
 import ta
-from datetime import datetime
 import plotly.graph_objects as go
 
 # =========================================================
@@ -37,32 +19,15 @@ st.set_page_config(
 # =========================================================
 
 ATIVOS = [
-    # Bancos
     "BBAS3.SA","ITUB4.SA","ITSA4.SA","BBDC4.SA","BBDC3.SA",
     "SANB11.SA","BPAC11.SA","BRSR6.SA","BMGB4.SA",
-
-    # Energia / Petróleo
     "PETR4.SA","PETR3.SA","PRIO3.SA","RECV3.SA","RRRP3.SA",
-
-    # Mineração / Siderurgia
     "VALE3.SA","CSNA3.SA","GGBR4.SA","USIM5.SA",
-
-    # Varejo
     "LREN3.SA","MGLU3.SA","ARZZ3.SA","ALOS3.SA",
-
-    # Industriais
     "WEGE3.SA","EMBR3.SA","TUPY3.SA",
-
-    # Seguros
     "PSSA3.SA","CXSE3.SA",
-
-    # Elétricas
     "TAEE11.SA","EGIE3.SA","CPLE6.SA","ELET3.SA",
-
-    # ETFs
     "BOVA11.SA","SMAL11.SA","IVVB11.SA",
-
-    # BDRs
     "AAPL34.SA","MSFT34.SA","GOGL34.SA","AMZO34.SA"
 ]
 
@@ -71,6 +36,7 @@ ATIVOS = [
 # =========================================================
 
 def calcular_indicadores(df):
+
     df = df.copy()
 
     df["EMA169"] = ta.trend.EMAIndicator(
@@ -105,6 +71,7 @@ def calcular_indicadores(df):
 
 
 def tendencia_ok(df):
+
     ultimo = df.iloc[-1]
 
     return (
@@ -114,6 +81,7 @@ def tendencia_ok(df):
 
 
 def tendencia_semanal_ok(df_diario):
+
     semanal = df_diario.resample("W").agg({
         "Open": "first",
         "High": "max",
@@ -136,13 +104,16 @@ def tendencia_semanal_ok(df_diario):
 
 
 def volume_ok(df):
+
     ultimo = df.iloc[-1]
+
     return ultimo["VOL_REL"] > 1
 
 
 def detectar_123_compra(df):
+
     if len(df) < 30:
-        return False, None, None, None
+        return False
 
     dados = df.tail(20).copy()
 
@@ -152,17 +123,19 @@ def detectar_123_compra(df):
     ponto1_idx = np.argmin(lows[:10])
 
     if ponto1_idx >= 8:
-        return False, None, None, None
+        return False
 
-    ponto2_idx = ponto1_idx + np.argmax(highs[ponto1_idx+1:15]) + 1
+    ponto2_idx = ponto1_idx + np.argmax(
+        highs[ponto1_idx + 1:15]
+    ) + 1
 
     if ponto2_idx <= ponto1_idx:
-        return False, None, None, None
+        return False
 
-    trecho3 = lows[ponto2_idx+1:]
+    trecho3 = lows[ponto2_idx + 1:]
 
     if len(trecho3) < 3:
-        return False, None, None, None
+        return False
 
     ponto3_rel = np.argmin(trecho3)
     ponto3_idx = ponto2_idx + 1 + ponto3_rel
@@ -171,29 +144,30 @@ def detectar_123_compra(df):
     low3 = lows[ponto3_idx]
 
     if low3 <= low1:
-        return False, None, None, None
+        return False
 
     topo2 = highs[ponto2_idx]
     fechamento = dados["Close"].iloc[-1]
 
     rompimento = fechamento > topo2
 
-    return rompimento, low1, topo2, low3
+    return rompimento
 
 
 def calcular_liquidez(df):
-    df = df.copy()
-    df["Financeiro"] = df["Close"] * df["Volume"]
-    liquidez_media = df["Financeiro"].tail(20).mean()
-    return liquidez_media
+
+    financeiro = df["Close"] * df["Volume"]
+
+    return financeiro.tail(20).mean()
 
 
 def backtest_probabilidade(df):
+
     ocorrencias = 0
     gains = 0
     losses = 0
 
-    for i in range(250, len(df)-15):
+    for i in range(250, len(df) - 15):
 
         trecho = df.iloc[:i].copy()
 
@@ -203,7 +177,7 @@ def backtest_probabilidade(df):
         if not volume_ok(trecho):
             continue
 
-        padrao, _, _, _ = detectar_123_compra(trecho)
+        padrao = detectar_123_compra(trecho)
 
         if not padrao:
             continue
@@ -211,10 +185,10 @@ def backtest_probabilidade(df):
         entrada = trecho.iloc[-1]["Close"]
         atr = trecho.iloc[-1]["ATR"]
 
-        stop = entrada - (1 * atr)
+        stop = entrada - atr
         alvo = entrada + (2 * atr)
 
-        futuro = df.iloc[i:i+15]
+        futuro = df.iloc[i:i + 15]
 
         resultado = None
 
@@ -229,6 +203,7 @@ def backtest_probabilidade(df):
                 break
 
         if resultado is not None:
+
             ocorrencias += 1
 
             if resultado == "gain":
@@ -239,17 +214,27 @@ def backtest_probabilidade(df):
     if ocorrencias == 0:
         return 0, 0, 0, 0
 
-    probabilidade = round((gains / ocorrencias) * 100, 2)
-
-    expectativa = round(
-        ((gains / ocorrencias) * 2) - ((losses / ocorrencias) * 1),
+    probabilidade = round(
+        (gains / ocorrencias) * 100,
         2
     )
 
-    return probabilidade, ocorrencias, gains, expectativa
+    expectativa = round(
+        ((gains / ocorrencias) * 2) -
+        ((losses / ocorrencias) * 1),
+        2
+    )
+
+    return (
+        probabilidade,
+        ocorrencias,
+        gains,
+        expectativa
+    )
 
 
 def gerar_score(probabilidade, vol_rel, expectativa):
+
     score = 0
 
     score += probabilidade * 0.5
@@ -260,6 +245,7 @@ def gerar_score(probabilidade, vol_rel, expectativa):
 
 
 def criar_grafico(df, ticker):
+
     fig = go.Figure()
 
     fig.add_trace(
@@ -283,20 +269,22 @@ def criar_grafico(df, ticker):
     )
 
     fig.update_layout(
-        title=f"{ticker}",
+        title=ticker,
         height=600,
         xaxis_rangeslider_visible=False
     )
 
     return fig
 
+
 # =========================================================
-# TÍTULO
+# INTERFACE
 # =========================================================
 
 st.title("SCANNER PROBABILÍSTICO B3")
 
 st.markdown("""
+
 ### Estratégia Utilizada
 
 - EMA169
@@ -307,11 +295,8 @@ st.markdown("""
 - Stop = 1 ATR
 - Alvo = 2 ATR
 - Ranking probabilístico
-""")
 
-# =========================================================
-# BOTÃO
-# =========================================================
+""")
 
 if st.button("ESCANEAR MERCADO"):
 
@@ -325,6 +310,7 @@ if st.button("ESCANEAR MERCADO"):
     for i, ticker in enumerate(ATIVOS):
 
         try:
+
             status.text(f"Analisando {ticker}...")
 
             df = yf.download(
@@ -349,9 +335,6 @@ if st.button("ESCANEAR MERCADO"):
             df = calcular_indicadores(df)
             df.dropna(inplace=True)
 
-            if len(df) < 250:
-                continue
-
             if not tendencia_ok(df):
                 continue
 
@@ -361,17 +344,26 @@ if st.button("ESCANEAR MERCADO"):
             if not volume_ok(df):
                 continue
 
-            padrao, p1, p2, p3 = detectar_123_compra(df)
-
-            if not padrao:
+            if not detectar_123_compra(df):
                 continue
 
-            probabilidade, ocorrencias, gains, expectativa = backtest_probabilidade(df)
+            (
+                probabilidade,
+                ocorrencias,
+                gains,
+                expectativa
+            ) = backtest_probabilidade(df)
 
             if ocorrencias < 10:
                 continue
 
             ultimo = df.iloc[-1]
+
+            entrada = round(ultimo["Close"], 2)
+            atr = round(ultimo["ATR"], 2)
+
+            stop = round(entrada - atr, 2)
+            alvo = round(entrada + (2 * atr), 2)
 
             score = gerar_score(
                 probabilidade,
@@ -379,28 +371,23 @@ if st.button("ESCANEAR MERCADO"):
                 expectativa
             )
 
-            entrada = round(ultimo["Close"], 2)
-            atr = round(ultimo["ATR"], 2)
-            stop = round(entrada - atr, 2)
-            alvo = round(entrada + (2 * atr), 2)
-
             resultados.append({
-                "Ranking": 0,
                 "Ativo": ticker.replace(".SA", ""),
-                "Probabilidade Histórica (%)": probabilidade,
+                "Probabilidade": probabilidade,
                 "Ocorrências": ocorrencias,
                 "Gains": gains,
-                "Expectativa Matemática": expectativa,
-                "Volume Relativo": round(ultimo["VOL_REL"], 2),
+                "Expectativa": expectativa,
+                "Volume": round(ultimo["VOL_REL"], 2),
                 "ATR": atr,
                 "Entrada": entrada,
                 "Stop": stop,
                 "Alvo": alvo,
                 "Score": score,
-                "Gráfico": df.tail(200)
+                "Grafico": df.tail(200)
             })
 
         except Exception as e:
+
             st.warning(f"Erro em {ticker}: {e}")
 
         progresso.progress((i + 1) / total)
@@ -408,7 +395,8 @@ if st.button("ESCANEAR MERCADO"):
     status.text("Análise concluída.")
 
     if len(resultados) == 0:
-        st.error("Nenhum ativo encontrado nas condições atuais.")
+
+        st.error("Nenhum ativo encontrado.")
 
     else:
 
@@ -419,11 +407,15 @@ if st.button("ESCANEAR MERCADO"):
             ascending=False
         ).reset_index(drop=True)
 
-        resultados_df["Ranking"] = resultados_df.index + 1
+        resultados_df.index += 1
 
-        st.success(f"{len(resultados_df)} ativos encontrados.")
+        st.success(
+            f"{len(resultados_df)} ativos encontrados."
+        )
 
-        tabela = resultados_df.drop(columns=["Gráfico"])
+        tabela = resultados_df.drop(
+            columns=["Grafico"]
+        )
 
         st.dataframe(
             tabela,
@@ -435,24 +427,28 @@ if st.button("ESCANEAR MERCADO"):
 
         st.subheader("DETALHAMENTO DOS ATIVOS")
 
-        for _, linha in resultados_df.iterrows():
+        for rank, linha in resultados_df.iterrows():
 
-            with st.expander(f"{linha['Ranking']}º - {linha['Ativo']} | Score {linha['Score']}"):
+            with st.expander(
+                f"#{rank} - {linha['Ativo']} | Score {linha['Score']}"
+            ):
 
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
+
                     st.metric(
-                        "Probabilidade Histórica",
-                        f"{linha['Probabilidade Histórica (%)']}%"
+                        "Probabilidade",
+                        f"{linha['Probabilidade']}%"
                     )
 
                     st.metric(
-                        "Expectativa Matemática",
-                        linha['Expectativa Matemática']
+                        "Expectativa",
+                        linha['Expectativa']
                     )
 
                 with col2:
+
                     st.metric(
                         "Entrada",
                         linha['Entrada']
@@ -464,6 +460,7 @@ if st.button("ESCANEAR MERCADO"):
                     )
 
                 with col3:
+
                     st.metric(
                         "Alvo",
                         linha['Alvo']
@@ -471,118 +468,29 @@ if st.button("ESCANEAR MERCADO"):
 
                     st.metric(
                         "Volume Relativo",
-                        linha['Volume Relativo']
+                        linha['Volume']
                     )
 
-                st.write(f"Ocorrências históricas analisadas: {linha['Ocorrências']}")
-                st.write(f"Quantidade de gains antes do stop: {linha['Gains']}")
+                st.write(
+                    f"Ocorrências históricas: {linha['Ocorrências']}"
+                )
 
-                fig = criar_grafico(linha['Gráfico'], linha['Ativo'])
-                st.plotly_chart(fig, use_container_width=True)
+                st.write(
+                    f"Gains antes do stop: {linha['Gains']}"
+                )
 
-# =========================================================
-# RODAPÉ
-# =========================================================
+                fig = criar_grafico(
+                    linha['Grafico'],
+                    linha['Ativo']
+                )
+
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
 
 st.divider()
 
 st.caption(
-    "Scanner Probabilístico B3 | EMA169 + DMI + Padrão 1,2,3 + ATR"
+    "Scanner Probabilístico B3 | EMA169 + DMI + ATR"
 )
-
-```
-
----
-
-# COMO PUBLICAR NO GITHUB E STREAMLIT
-
-## 1. Criar uma conta
-
-* GitHub
-* Streamlit Community Cloud
-
----
-
-## 2. Criar repositório no GitHub
-
-Nome sugerido:
-
-```text
-scanner-probabilistico-b3
-```
-
----
-
-## 3. Subir os arquivos
-
-Arquivos obrigatórios:
-
-```text
-app.py
-requirements.txt
-```
-
----
-
-## 4. Publicar no Streamlit
-
-Entrar em:
-
-[https://streamlit.io/cloud](https://streamlit.io/cloud)
-
-Selecionar:
-
-* repositório
-* branch principal
-* app.py
-
-Depois clicar:
-
-```text
-DEPLOY
-```
-
----
-
-# OBSERVAÇÕES IMPORTANTES
-
-## O app foi criado para:
-
-* gráfico diário
-* confirmação semanal
-* swing trade
-* tendência forte
-* operações compradas
-
----
-
-## Estrutura probabilística usada
-
-* stop = 1 ATR
-* alvo = 2 ATR
-* cálculo histórico
-* ranking do melhor para o pior
-
----
-
-## Tudo está em português
-
-* métricas
-* ranking
-* resultados
-* estatísticas
-* interface
-
----
-
-## Próximas melhorias futuras possíveis
-
-* score avançado
-* exportação PDF
-* alertas automáticos
-* banco de dados
-* machine learning
-* heatmap de setores
-* expectativa matemática avançada
-* detecção mais refinada do 1,2,3
-
