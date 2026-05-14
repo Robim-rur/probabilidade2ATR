@@ -7,11 +7,11 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # =========================================================
-# CONFIGURAÇÃO DA PÁGINA
+# CONFIGURAÇÃO
 # =========================================================
 
 st.set_page_config(
-    page_title="Scanner Probabilístico B3",
+    page_title="Scanner Quantitativo B3",
     layout="wide"
 )
 
@@ -186,16 +186,34 @@ def calcular_indicadores(df):
     return df
 
 
+def calcular_liquidez(df):
+
+    financeiro = (
+        df["Close"] * df["Volume"]
+    )
+
+    return float(
+        financeiro.tail(20).mean()
+    )
+
+
+def volume_ok(df):
+
+    ultimo = df.iloc[-1]
+
+    return bool(
+        ultimo["VOL_REL"] > 1
+    )
+
+
 def tendencia_ok(df):
 
     ultimo = df.iloc[-1]
 
-    condicao = (
+    return bool(
         (ultimo["Close"] > ultimo["EMA169"]) and
         (ultimo["DI_POS"] > ultimo["DI_NEG"])
     )
-
-    return bool(condicao)
 
 
 def tendencia_semanal_ok(df_diario):
@@ -215,22 +233,17 @@ def tendencia_semanal_ok(df_diario):
 
     ultimo = semanal.iloc[-1]
 
-    condicao = (
+    return bool(
         (ultimo["Close"] > ultimo["EMA169"]) and
         (ultimo["DI_POS"] > ultimo["DI_NEG"])
     )
 
-    return bool(condicao)
+# =========================================================
+# SETUP 1
+# 1,2,3 DE COMPRA
+# =========================================================
 
-
-def volume_ok(df):
-
-    ultimo = df.iloc[-1]
-
-    return bool(ultimo["VOL_REL"] > 1)
-
-
-def detectar_123_compra(df):
+def setup_123(df):
 
     if len(df) < 30:
         return False
@@ -256,20 +269,15 @@ def detectar_123_compra(df):
         1
     )
 
-    if ponto2_idx <= ponto1_idx:
-        return False
-
     trecho3 = lows[ponto2_idx + 1:]
 
     if len(trecho3) < 3:
         return False
 
-    ponto3_rel = np.argmin(trecho3)
-
     ponto3_idx = (
         ponto2_idx +
         1 +
-        ponto3_rel
+        np.argmin(trecho3)
     )
 
     low1 = lows[ponto1_idx]
@@ -284,23 +292,76 @@ def detectar_123_compra(df):
         dados["Close"].iloc[-1]
     )
 
-    rompimento = fechamento > topo2
-
-    return bool(rompimento)
-
-
-def calcular_liquidez(df):
-
-    financeiro = (
-        df["Close"] * df["Volume"]
+    return bool(
+        fechamento > topo2
     )
 
-    return float(
-        financeiro.tail(20).mean()
+# =========================================================
+# SETUP 2
+# MÉDIAS ALINHADAS
+# =========================================================
+
+def setup_medias(df):
+
+    ultimo = df.iloc[-1]
+
+    alinhadas = (
+        ultimo["EMA9"] >
+        ultimo["EMA29"] >
+        ultimo["EMA69"] >
+        ultimo["EMA169"]
     )
 
+    rompimento = (
+        ultimo["Close"] >
+        df["High"].tail(5).max()
+    )
 
-def backtest_probabilidade(df):
+    return bool(
+        alinhadas and
+        rompimento
+    )
+
+# =========================================================
+# SETUP 3
+# PULLBACK EMA9
+# =========================================================
+
+def setup_pullback_ema9(df):
+
+    if len(df) < 15:
+        return False
+
+    ultimo = df.iloc[-1]
+    anterior = df.iloc[-2]
+
+    alinhadas = (
+        ultimo["EMA9"] >
+        ultimo["EMA29"] >
+        ultimo["EMA69"] >
+        ultimo["EMA169"]
+    )
+
+    toque_ema9 = (
+        anterior["Low"] <= anterior["EMA9"]
+    )
+
+    fechamento_forte = (
+        ultimo["Close"] >
+        ultimo["EMA9"]
+    )
+
+    return bool(
+        alinhadas and
+        toque_ema9 and
+        fechamento_forte
+    )
+
+# =========================================================
+# BACKTEST
+# =========================================================
+
+def backtest(df, func_setup):
 
     ocorrencias = 0
     gains = 0
@@ -315,10 +376,13 @@ def backtest_probabilidade(df):
             if not tendencia_ok(trecho):
                 continue
 
+            if not tendencia_semanal_ok(trecho):
+                continue
+
             if not volume_ok(trecho):
                 continue
 
-            if not detectar_123_compra(trecho):
+            if not func_setup(trecho):
                 continue
 
             entrada = float(
@@ -349,7 +413,7 @@ def backtest_probabilidade(df):
                     resultado = "gain"
                     break
 
-            if resultado is not None:
+            if resultado:
 
                 ocorrencias += 1
 
@@ -382,19 +446,22 @@ def backtest_probabilidade(df):
         expectativa
     )
 
+# =========================================================
+# SCORE
+# =========================================================
 
-def gerar_score(probabilidade, vol_rel, expectativa):
+def gerar_score(probabilidade, volume, expectativa):
 
     score = 0
 
     score += probabilidade * 0.5
-    score += min(vol_rel * 10, 20)
+    score += min(volume * 10, 20)
     score += max(expectativa * 20, 0)
 
     return round(score, 2)
 
 
-def classificar_score(score):
+def classificar(score):
 
     if score >= 80:
         return "EXCELENTE"
@@ -407,20 +474,23 @@ def classificar_score(score):
 
     return "FRACO"
 
+# =========================================================
+# RELATÓRIO
+# =========================================================
 
-def criar_relatorio(linha):
+def criar_relatorio(linha, nome_setup):
 
-    relatorio = f"""
+    return f"""
 RELATÓRIO OPERACIONAL
 
-Data:
-{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+SETUP:
+{nome_setup}
 
 ATIVO:
 {linha['Ativo']}
 
 CLASSIFICAÇÃO:
-{classificar_score(linha['Score'])}
+{linha['Classificação']}
 
 SCORE:
 {linha['Score']}
@@ -431,10 +501,10 @@ PROBABILIDADE:
 EXPECTATIVA:
 {linha['Expectativa']}
 
-OCORRÊNCIAS HISTÓRICAS:
+OCORRÊNCIAS:
 {linha['Ocorrências']}
 
-GAINS ANTES DO STOP:
+GAINS:
 {linha['Gains']}
 
 ENTRADA:
@@ -451,13 +521,11 @@ ATR:
 
 VOLUME RELATIVO:
 {linha['Volume']}
-
-ESTRATÉGIA:
-EMA169 + DMI + VOLUME + PADRÃO 1,2,3 + ATR
 """
 
-    return relatorio
-
+# =========================================================
+# GRÁFICO
+# =========================================================
 
 def criar_grafico(df, ticker):
 
@@ -474,41 +542,16 @@ def criar_grafico(df, ticker):
         )
     )
 
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df["EMA9"],
-            mode="lines",
-            name="EMA9"
-        )
-    )
+    for ema in ["EMA9", "EMA29", "EMA69", "EMA169"]:
 
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df["EMA29"],
-            mode="lines",
-            name="EMA29"
+        fig.add_trace(
+            go.Scatter(
+                x=df.index,
+                y=df[ema],
+                mode="lines",
+                name=ema
+            )
         )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df["EMA69"],
-            mode="lines",
-            name="EMA69"
-        )
-    )
-
-    fig.add_trace(
-        go.Scatter(
-            x=df.index,
-            y=df["EMA169"],
-            mode="lines",
-            name="EMA169"
-        )
-    )
 
     fig.update_layout(
         title=ticker,
@@ -519,30 +562,10 @@ def criar_grafico(df, ticker):
     return fig
 
 # =========================================================
-# INTERFACE
+# SCANNER
 # =========================================================
 
-st.title("SCANNER PROBABILÍSTICO B3")
-
-st.markdown("""
-
-### Estratégia Utilizada
-
-- EMA9
-- EMA29
-- EMA69
-- EMA169
-- DMI (DI+ > DI−)
-- Tendência semanal confirmando
-- Padrão 1,2,3 de compra
-- Volume acima da média
-- Stop = 1 ATR
-- Alvo = 2 ATR
-- Ranking probabilístico
-
-""")
-
-if st.button("ESCANEAR MERCADO"):
+def executar_scanner(nome_setup, func_setup):
 
     resultados = []
 
@@ -597,7 +620,7 @@ if st.button("ESCANEAR MERCADO"):
             if not volume_ok(df):
                 continue
 
-            if not detectar_123_compra(df):
+            if not func_setup(df):
                 continue
 
             (
@@ -605,7 +628,7 @@ if st.button("ESCANEAR MERCADO"):
                 ocorrencias,
                 gains,
                 expectativa
-            ) = backtest_probabilidade(df)
+            ) = backtest(df, func_setup)
 
             if ocorrencias < 10:
                 continue
@@ -638,7 +661,7 @@ if st.button("ESCANEAR MERCADO"):
                 expectativa
             )
 
-            classificacao = classificar_score(score)
+            classificacao = classificar(score)
 
             resultados.append({
 
@@ -685,14 +708,10 @@ if st.button("ESCANEAR MERCADO"):
 
                 "Grafico":
                     df.tail(200)
-
             })
 
-        except Exception as e:
-
-            st.warning(
-                f"Erro em {ticker}: {e}"
-            )
+        except:
+            continue
 
         progresso.progress(
             (i + 1) / total
@@ -702,147 +721,205 @@ if st.button("ESCANEAR MERCADO"):
 
     if len(resultados) == 0:
 
-        st.error(
+        st.warning(
             "Nenhum ativo encontrado."
         )
 
-    else:
+        return
 
-        resultados_df = pd.DataFrame(
-            resultados
+    resultados_df = pd.DataFrame(
+        resultados
+    )
+
+    resultados_df = (
+        resultados_df
+        .sort_values(
+            by="Score",
+            ascending=False
         )
+        .reset_index(drop=True)
+    )
 
-        resultados_df = (
-            resultados_df
-            .sort_values(
-                by="Score",
-                ascending=False
-            )
-            .reset_index(drop=True)
-        )
+    resultados_df.index += 1
 
-        resultados_df.index += 1
+    st.success(
+        f"{len(resultados_df)} ativos encontrados."
+    )
 
-        st.success(
-            f"{len(resultados_df)} ativos encontrados."
-        )
+    tabela = resultados_df.drop(
+        columns=["Grafico"]
+    )
 
-        tabela = resultados_df.drop(
-            columns=["Grafico"]
-        )
+    st.dataframe(
+        tabela,
+        use_container_width=True,
+        height=500
+    )
 
-        st.dataframe(
-            tabela,
-            use_container_width=True,
-            height=500
-        )
+    st.divider()
 
-        st.divider()
+    for rank, linha in resultados_df.iterrows():
 
-        st.subheader(
-            "DETALHAMENTO DOS ATIVOS"
-        )
-
-        for rank, linha in (
-            resultados_df.iterrows()
+        with st.expander(
+            f"#{rank} | "
+            f"{linha['Ativo']} | "
+            f"{linha['Classificação']} | "
+            f"Score {linha['Score']}"
         ):
 
-            with st.expander(
-                f"#{rank} - "
-                f"{linha['Ativo']} | "
-                f"{linha['Classificação']} | "
-                f"Score {linha['Score']}"
-            ):
+            relatorio = criar_relatorio(
+                linha,
+                nome_setup
+            )
 
-                relatorio = criar_relatorio(linha)
+            st.download_button(
+                label="📥 Baixar Relatório",
+                data=relatorio,
+                file_name=f"{linha['Ativo']}.txt",
+                mime="text/plain"
+            )
 
-                st.download_button(
-                    label="📥 Baixar Relatório",
-                    data=relatorio,
-                    file_name=f"{linha['Ativo']}_relatorio.txt",
-                    mime="text/plain"
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+
+                st.metric(
+                    "Probabilidade",
+                    f"{linha['Probabilidade']}%"
                 )
 
-                st.divider()
-
-                col1, col2, col3 = (
-                    st.columns(3)
+                st.metric(
+                    "Expectativa",
+                    linha['Expectativa']
                 )
 
-                with col1:
-
-                    st.metric(
-                        "Probabilidade",
-                        f"{linha['Probabilidade']}%"
-                    )
-
-                    st.metric(
-                        "Expectativa",
-                        linha['Expectativa']
-                    )
-
-                    st.metric(
-                        "Classificação",
-                        linha['Classificação']
-                    )
-
-                with col2:
-
-                    st.metric(
-                        "Entrada",
-                        linha['Entrada']
-                    )
-
-                    st.metric(
-                        "Stop",
-                        linha['Stop']
-                    )
-
-                    st.metric(
-                        "ATR",
-                        linha['ATR']
-                    )
-
-                with col3:
-
-                    st.metric(
-                        "Alvo",
-                        linha['Alvo']
-                    )
-
-                    st.metric(
-                        "Volume Relativo",
-                        linha['Volume']
-                    )
-
-                    st.metric(
-                        "Score",
-                        linha['Score']
-                    )
-
-                st.write(
-                    f"Ocorrências históricas: "
-                    f"{linha['Ocorrências']}"
+                st.metric(
+                    "Classificação",
+                    linha['Classificação']
                 )
 
-                st.write(
-                    f"Gains antes do stop: "
-                    f"{linha['Gains']}"
+            with col2:
+
+                st.metric(
+                    "Entrada",
+                    linha['Entrada']
                 )
 
-                fig = criar_grafico(
-                    linha['Grafico'],
-                    linha['Ativo']
+                st.metric(
+                    "Stop",
+                    linha['Stop']
                 )
 
-                st.plotly_chart(
-                    fig,
-                    use_container_width=True
+                st.metric(
+                    "ATR",
+                    linha['ATR']
                 )
+
+            with col3:
+
+                st.metric(
+                    "Alvo",
+                    linha['Alvo']
+                )
+
+                st.metric(
+                    "Volume Relativo",
+                    linha['Volume']
+                )
+
+                st.metric(
+                    "Score",
+                    linha['Score']
+                )
+
+            st.write(
+                f"Ocorrências históricas: "
+                f"{linha['Ocorrências']}"
+            )
+
+            st.write(
+                f"Gains antes do stop: "
+                f"{linha['Gains']}"
+            )
+
+            fig = criar_grafico(
+                linha["Grafico"],
+                linha["Ativo"]
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+# =========================================================
+# INTERFACE
+# =========================================================
+
+st.title(
+    "SCANNER QUANTITATIVO B3"
+)
+
+st.markdown("""
+### Plataforma Multi-Setups Probabilísticos
+""")
+
+aba1, aba2, aba3 = st.tabs([
+
+    "SETUP 1 - 1,2,3",
+    "SETUP 2 - MÉDIAS",
+    "SETUP 3 - PULLBACK EMA9"
+
+])
+
+with aba1:
+
+    st.subheader(
+        "SETUP 1 - 1,2,3 DE COMPRA"
+    )
+
+    if st.button(
+        "ESCANEAR SETUP 1"
+    ):
+
+        executar_scanner(
+            "1,2,3 DE COMPRA",
+            setup_123
+        )
+
+with aba2:
+
+    st.subheader(
+        "SETUP 2 - MÉDIAS ALINHADAS"
+    )
+
+    if st.button(
+        "ESCANEAR SETUP 2"
+    ):
+
+        executar_scanner(
+            "MÉDIAS ALINHADAS",
+            setup_medias
+        )
+
+with aba3:
+
+    st.subheader(
+        "SETUP 3 - PULLBACK EMA9"
+    )
+
+    if st.button(
+        "ESCANEAR SETUP 3"
+    ):
+
+        executar_scanner(
+            "PULLBACK EMA9",
+            setup_pullback_ema9
+        )
 
 st.divider()
 
 st.caption(
-    "Scanner Probabilístico B3 "
-    "| EMA169 + DMI + ATR"
+    "Scanner Quantitativo B3 "
+    "| Multi-Setups Probabilísticos"
 )
