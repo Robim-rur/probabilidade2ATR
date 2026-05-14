@@ -116,7 +116,6 @@ ATIVOS = [
     "SMAL11.SA",
     "IVVB11.SA",
     "DIVO11.SA"
-
 ]
 
 # =========================================================
@@ -134,6 +133,21 @@ def ajustar_colunas(df):
 def calcular_indicadores(df):
 
     df = df.copy()
+
+    df["EMA9"] = ta.trend.EMAIndicator(
+        close=df["Close"],
+        window=9
+    ).ema_indicator()
+
+    df["EMA29"] = ta.trend.EMAIndicator(
+        close=df["Close"],
+        window=29
+    ).ema_indicator()
+
+    df["EMA69"] = ta.trend.EMAIndicator(
+        close=df["Close"],
+        window=69
+    ).ema_indicator()
 
     df["EMA169"] = ta.trend.EMAIndicator(
         close=df["Close"],
@@ -160,7 +174,9 @@ def calcular_indicadores(df):
 
     df["ATR"] = atr.average_true_range()
 
-    df["VOL_MEDIA20"] = df["Volume"].rolling(20).mean()
+    df["VOL_MEDIA20"] = (
+        df["Volume"].rolling(20).mean()
+    )
 
     df["VOL_REL"] = (
         df["Volume"] / df["VOL_MEDIA20"]
@@ -395,6 +411,33 @@ def criar_grafico(df, ticker):
     fig.add_trace(
         go.Scatter(
             x=df.index,
+            y=df["EMA9"],
+            mode="lines",
+            name="EMA9"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["EMA29"],
+            mode="lines",
+            name="EMA29"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["EMA69"],
+            mode="lines",
+            name="EMA69"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
             y=df["EMA169"],
             mode="lines",
             name="EMA169"
@@ -403,11 +446,12 @@ def criar_grafico(df, ticker):
 
     fig.update_layout(
         title=ticker,
-        height=600,
+        height=650,
         xaxis_rangeslider_visible=False
     )
 
     return fig
+
 
 # =========================================================
 # INTERFACE
