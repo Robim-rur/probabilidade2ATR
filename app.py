@@ -191,16 +191,14 @@ def tendencia_ok(df):
     ultimo = df.iloc[-1]
 
     condicao = (
+
         (ultimo["Close"] > ultimo["EMA169"]) and
         (ultimo["DI_POS"] > ultimo["DI_NEG"])
+
     )
 
     return bool(condicao)
 
-
-# =========================================================
-# AJUSTE SEMANAL SUAVIZADO
-# =========================================================
 
 def tendencia_semanal_ok(df_diario):
 
@@ -226,10 +224,6 @@ def tendencia_semanal_ok(df_diario):
     )
 
 
-# =========================================================
-# AJUSTE VOLUME MAIS FLEXÍVEL
-# =========================================================
-
 def volume_ok(df):
 
     ultimo = df.iloc[-1]
@@ -238,64 +232,46 @@ def volume_ok(df):
         ultimo["VOL_REL"] > 0.8
     )
 
+# =========================================================
+# NOVO 1,2,3 INSTITUCIONAL
+# =========================================================
 
 def detectar_123_compra(df):
 
     if len(df) < 30:
         return False
 
-    dados = df.tail(20).copy()
+    ultimo = df.iloc[-1]
 
-    lows = dados["Low"].values
-    highs = dados["High"].values
+    close = float(ultimo["Close"])
 
-    ponto1_idx = np.argmin(lows[:10])
+    ema9 = float(ultimo["EMA9"])
+    ema29 = float(ultimo["EMA29"])
+    ema69 = float(ultimo["EMA69"])
 
-    if ponto1_idx >= 8:
-        return False
-
-    trecho_p2 = highs[ponto1_idx + 1:15]
-
-    if len(trecho_p2) == 0:
-        return False
-
-    ponto2_idx = (
-        ponto1_idx +
-        np.argmax(trecho_p2) +
-        1
+    maxima_5 = float(
+        df["High"].tail(5).max()
     )
 
-    if ponto2_idx <= ponto1_idx:
-        return False
-
-    trecho3 = lows[ponto2_idx + 1:]
-
-    if len(trecho3) < 3:
-        return False
-
-    ponto3_rel = np.argmin(trecho3)
-
-    ponto3_idx = (
-        ponto2_idx +
-        1 +
-        ponto3_rel
+    volume_rel = float(
+        ultimo["VOL_REL"]
     )
 
-    low1 = lows[ponto1_idx]
-    low3 = lows[ponto3_idx]
+    condicoes = [
 
-    if low3 <= low1:
-        return False
+        close > ema9,
 
-    topo2 = highs[ponto2_idx]
+        ema9 > ema29,
 
-    fechamento = float(
-        dados["Close"].iloc[-1]
-    )
+        ema29 > ema69,
 
-    rompimento = fechamento > topo2
+        close >= maxima_5 * 0.995,
 
-    return bool(rompimento)
+        volume_rel > 0.8
+
+    ]
+
+    return all(condicoes)
 
 
 def calcular_liquidez(df):
@@ -462,7 +438,7 @@ VOLUME RELATIVO:
 {linha['Volume']}
 
 ESTRATÉGIA:
-EMA169 + DMI + VOLUME + PADRÃO 1,2,3 + ATR
+EMA169 + DMI + ATR + BREAKOUT
 """
 
     return relatorio
@@ -542,9 +518,9 @@ st.markdown("""
 - EMA69
 - EMA169
 - DMI (DI+ > DI−)
-- Tendência semanal suavizada
-- Padrão 1,2,3 de compra
-- Volume flexível
+- Tendência semanal
+- Breakout probabilístico
+- Volume relativo
 - Stop = 1 ATR
 - Alvo = 2 ATR
 - Ranking probabilístico
@@ -615,10 +591,6 @@ if st.button("ESCANEAR MERCADO"):
                 gains,
                 expectativa
             ) = backtest_probabilidade(df)
-
-            # =====================================================
-            # AJUSTADO DE 10 PARA 3
-            # =====================================================
 
             if ocorrencias < 3:
                 continue
@@ -856,6 +828,5 @@ if st.button("ESCANEAR MERCADO"):
 st.divider()
 
 st.caption(
-    "Scanner Probabilístico B3 "
-    "| EMA169 + DMI + ATR"
+    "Scanner Probabilístico B3 | EMA169 + ATR + Breakout"
 )
