@@ -21,102 +21,36 @@ st.set_page_config(
 
 ATIVOS = [
 
-    "GARE11.SA",
-    "HGLG11.SA",
-    "XPLG11.SA",
-    "VILG11.SA",
-    "BRCO11.SA",
-    "BTLG11.SA",
-    "XPML11.SA",
-    "VISC11.SA",
-    "HSML11.SA",
-    "MALL11.SA",
-    "KNRI11.SA",
-    "JSRE11.SA",
-    "PVBI11.SA",
-    "HGRE11.SA",
-    "MXRF11.SA",
-    "KNCR11.SA",
-    "KNIP11.SA",
-    "CPTS11.SA",
-    "IRDM11.SA",
-    "TGAR11.SA",
-    "TRXF11.SA",
-    "HGRU11.SA",
-    "ALZR11.SA",
-    "XPCA11.SA",
-    "VGIA11.SA",
-    "RBRR11.SA",
-    "KNSC11.SA",
-    "HGCR11.SA",
-    "MCCI11.SA",
-    "RECR11.SA",
-    "VRTA11.SA",
-    "BCFF11.SA",
-    "HFOF11.SA",
-    "XPSF11.SA",
-    "RBRP11.SA",
-    "RBRF11.SA",
-    "RZTR11.SA",
-    "RURA11.SA",
-    "VGIR11.SA",
-    "CVBI11.SA",
-    "UTLL11.SA",
-    "GGRC11.SA",
-    "AUVP11.SA",
-    "IEEX11.SA",
+    "GARE11.SA","HGLG11.SA","XPLG11.SA","VILG11.SA",
+    "BRCO11.SA","BTLG11.SA","XPML11.SA","VISC11.SA",
+    "HSML11.SA","MALL11.SA","KNRI11.SA","JSRE11.SA",
+    "PVBI11.SA","HGRE11.SA","MXRF11.SA","KNCR11.SA",
+    "KNIP11.SA","CPTS11.SA","IRDM11.SA","TGAR11.SA",
+    "TRXF11.SA","HGRU11.SA","ALZR11.SA","XPCA11.SA",
+    "VGIA11.SA","RBRR11.SA","KNSC11.SA","HGCR11.SA",
+    "MCCI11.SA","RECR11.SA","VRTA11.SA","BCFF11.SA",
+    "HFOF11.SA","XPSF11.SA","RBRP11.SA","RBRF11.SA",
+    "RZTR11.SA","RURA11.SA","VGIR11.SA","CVBI11.SA",
+    "UTLL11.SA","GGRC11.SA","AUVP11.SA","IEEX11.SA",
 
-    "TAEE11.SA",
-    "CMIG4.SA",
-    "CPFE3.SA",
-    "EQTL3.SA",
-    "ELET3.SA",
-    "ELET6.SA",
-    "ALUP11.SA",
-    "TRPL4.SA",
-    "NEOE3.SA",
-    "ENGI11.SA",
-    "SBSP3.SA",
-    "SAPR11.SA",
+    "TAEE11.SA","CMIG4.SA","CPFE3.SA","EQTL3.SA",
+    "ELET3.SA","ELET6.SA","ALUP11.SA","TRPL4.SA",
+    "NEOE3.SA","ENGI11.SA","SBSP3.SA","SAPR11.SA",
     "CSMG3.SA",
 
-    "BBAS3.SA",
-    "ITUB4.SA",
-    "ITSA4.SA",
-    "BBDC4.SA",
-    "BBDC3.SA",
-    "SANB11.SA",
-    "BPAC11.SA",
-    "BRSR6.SA",
+    "BBAS3.SA","ITUB4.SA","ITSA4.SA","BBDC4.SA",
+    "BBDC3.SA","SANB11.SA","BPAC11.SA","BRSR6.SA",
 
-    "VALE3.SA",
-    "PETR4.SA",
-    "PETR3.SA",
-    "WEGE3.SA",
-    "SUZB3.SA",
-    "KLBN11.SA",
-    "JBSS3.SA",
-    "PRIO3.SA",
-    "RECV3.SA",
-    "EGIE3.SA",
-    "VIVT3.SA",
-    "TOTS3.SA",
+    "VALE3.SA","PETR4.SA","PETR3.SA","WEGE3.SA",
+    "SUZB3.SA","KLBN11.SA","JBSS3.SA","PRIO3.SA",
+    "RECV3.SA","EGIE3.SA","VIVT3.SA","TOTS3.SA",
     "RAIL3.SA",
 
-    "AAPL34.SA",
-    "MSFT34.SA",
-    "GOGL34.SA",
-    "AMZO34.SA",
-    "META34.SA",
-    "NVDC34.SA",
-    "JPMC34.SA",
-    "DISB34.SA",
+    "AAPL34.SA","MSFT34.SA","GOGL34.SA","AMZO34.SA",
+    "META34.SA","NVDC34.SA","JPMC34.SA","DISB34.SA",
     "SBUX34.SA",
 
-    "BOVA11.SA",
-    "SMAL11.SA",
-    "IVVB11.SA",
-    "DIVO11.SA"
+    "BOVA11.SA","SMAL11.SA","IVVB11.SA","DIVO11.SA"
 ]
 
 # =========================================================
@@ -206,7 +140,16 @@ def calcular_liquidez(df):
 # FILTROS
 # =========================================================
 
-def volume_ok(df):
+def filtro_ema169(df):
+
+    ultimo = df.iloc[-1]
+
+    return bool(
+        ultimo["Close"] > ultimo["EMA169"]
+    )
+
+
+def filtro_volume(df):
 
     ultimo = df.iloc[-1]
 
@@ -215,17 +158,16 @@ def volume_ok(df):
     )
 
 
-def tendencia_ok(df):
+def filtro_dmi(df):
 
     ultimo = df.iloc[-1]
 
     return bool(
-        (ultimo["Close"] > ultimo["EMA169"]) and
-        (ultimo["DI_POS"] > ultimo["DI_NEG"])
+        ultimo["DI_POS"] > ultimo["DI_NEG"]
     )
 
 
-def tendencia_semanal_ok(df_diario):
+def filtro_semanal(df_diario):
 
     semanal = df_diario.resample("W").agg({
         "Open": "first",
@@ -247,7 +189,7 @@ def tendencia_semanal_ok(df_diario):
     )
 
 # =========================================================
-# SETUP 1
+# SETUP 1 - 1,2,3
 # =========================================================
 
 def setup_123(df):
@@ -304,7 +246,7 @@ def setup_123(df):
     )
 
 # =========================================================
-# SETUP 2
+# SETUP 2 - MÉDIAS
 # =========================================================
 
 def setup_medias(df):
@@ -335,7 +277,7 @@ def setup_medias(df):
     )
 
 # =========================================================
-# SETUP 3
+# SETUP 3 - PULLBACK EMA9
 # =========================================================
 
 def setup_pullback_ema9(df):
@@ -353,26 +295,26 @@ def setup_pullback_ema9(df):
         ultimo["EMA169"]
     )
 
-    toque_ema9 = (
+    toque = (
         anterior["Low"] <= anterior["EMA9"]
     )
 
-    fechamento_forte = (
+    fechamento = (
         ultimo["Close"] >
         ultimo["EMA9"]
     )
 
     return bool(
         alinhadas and
-        toque_ema9 and
-        fechamento_forte
+        toque and
+        fechamento
     )
 
 # =========================================================
 # BACKTEST
 # =========================================================
 
-def backtest(df, func_setup):
+def backtest(df, setup_func):
 
     ocorrencias = 0
     gains = 0
@@ -384,7 +326,7 @@ def backtest(df, func_setup):
 
         try:
 
-            if not func_setup(trecho):
+            if not setup_func(trecho):
                 continue
 
             entrada = float(
@@ -480,13 +422,13 @@ def classificar(score):
 # RELATÓRIO
 # =========================================================
 
-def criar_relatorio(linha, nome_setup):
+def criar_relatorio(linha, setup_nome):
 
     return f"""
 RELATÓRIO OPERACIONAL
 
 SETUP:
-{nome_setup}
+{setup_nome}
 
 ATIVO:
 {linha['Ativo']}
@@ -567,7 +509,14 @@ def criar_grafico(df, ticker):
 # SCANNER
 # =========================================================
 
-def executar_scanner(nome_setup, func_setup):
+def executar_scanner(
+    nome_setup,
+    setup_func,
+    usar_ema169=False,
+    usar_volume=False,
+    usar_dmi=False,
+    usar_semanal=False
+):
 
     resultados = []
 
@@ -613,16 +562,33 @@ def executar_scanner(nome_setup, func_setup):
             if len(df) < 250:
                 continue
 
-            if not tendencia_ok(df):
-                continue
+            # =====================================
+            # FILTROS INDEPENDENTES
+            # =====================================
 
-            if not tendencia_semanal_ok(df):
-                continue
+            if usar_ema169:
 
-            if not volume_ok(df):
-                continue
+                if not filtro_ema169(df):
+                    continue
 
-            if not func_setup(df):
+            if usar_volume:
+
+                if not filtro_volume(df):
+                    continue
+
+            if usar_dmi:
+
+                if not filtro_dmi(df):
+                    continue
+
+            if usar_semanal:
+
+                if not filtro_semanal(df):
+                    continue
+
+            # =====================================
+
+            if not setup_func(df):
                 continue
 
             (
@@ -630,9 +596,11 @@ def executar_scanner(nome_setup, func_setup):
                 ocorrencias,
                 gains,
                 expectativa
-            ) = backtest(df, func_setup)
+            ) = backtest(
+                df,
+                setup_func
+            )
 
-            # FLEXIBILIZADO
             if ocorrencias < 3:
                 continue
 
@@ -878,10 +846,15 @@ aba1, aba2, aba3 = st.tabs([
 
 ])
 
+# =========================================================
+# SETUP 1
+# MAIS FLEXÍVEL
+# =========================================================
+
 with aba1:
 
     st.subheader(
-        "SETUP 1 - 1,2,3 DE COMPRA"
+        "SETUP 1 - 1,2,3"
     )
 
     if st.button(
@@ -889,14 +862,23 @@ with aba1:
     ):
 
         executar_scanner(
-            "1,2,3 DE COMPRA",
-            setup_123
+            nome_setup="1,2,3",
+            setup_func=setup_123,
+            usar_ema169=True,
+            usar_volume=False,
+            usar_dmi=False,
+            usar_semanal=False
         )
+
+# =========================================================
+# SETUP 2
+# MAIS RÍGIDO
+# =========================================================
 
 with aba2:
 
     st.subheader(
-        "SETUP 2 - MÉDIAS ALINHADAS"
+        "SETUP 2 - MÉDIAS"
     )
 
     if st.button(
@@ -904,9 +886,18 @@ with aba2:
     ):
 
         executar_scanner(
-            "MÉDIAS ALINHADAS",
-            setup_medias
+            nome_setup="MÉDIAS",
+            setup_func=setup_medias,
+            usar_ema169=True,
+            usar_volume=True,
+            usar_dmi=True,
+            usar_semanal=True
         )
+
+# =========================================================
+# SETUP 3
+# INTERMEDIÁRIO
+# =========================================================
 
 with aba3:
 
@@ -919,16 +910,14 @@ with aba3:
     ):
 
         executar_scanner(
-            "PULLBACK EMA9",
-            setup_pullback_ema9
+            nome_setup="PULLBACK EMA9",
+            setup_func=setup_pullback_ema9,
+            usar_ema169=True,
+            usar_volume=True,
+            usar_dmi=False,
+            usar_semanal=False
         )
 
-st.divider()
-
-st.caption(
-    "Scanner Quantitativo B3 "
-    "| Multi-Setups Probabilísticos"
-)
 st.divider()
 
 st.caption(
