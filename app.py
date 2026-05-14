@@ -63,10 +63,7 @@ ATIVOS = [
         "GGRC11.SA",
         "AUVP11.SA",
         "IEEX11.SA"
-    ],
-
-    "Utilities": [
-
+   
         "TAEE11.SA",
         "CMIG4.SA",
         "CPFE3.SA",
@@ -80,9 +77,7 @@ ATIVOS = [
         "SBSP3.SA",
         "SAPR11.SA",
         "CSMG3.SA"
-    ],
-
-    "Bancos": [
+    ]
 
         "BBAS3.SA",
         "ITUB4.SA",
@@ -92,9 +87,6 @@ ATIVOS = [
         "SANB11.SA",
         "BPAC11.SA",
         "BRSR6.SA"
-    ],
-
-    "Blue Chips": [
 
         "VALE3.SA",
         "PETR4.SA",
@@ -109,9 +101,6 @@ ATIVOS = [
         "VIVT3.SA",
         "TOTS3.SA",
         "RAIL3.SA"
-    ],
-
-    "BDRs": [
 
         "AAPL34.SA",
         "MSFT34.SA",
@@ -122,16 +111,12 @@ ATIVOS = [
         "JPMC34.SA",
         "DISB34.SA",
         "SBUX34.SA"
-    ],
-
-    "ETFs": [
 
         "BOVA11.SA",
         "SMAL11.SA",
         "IVVB11.SA",
         "DIVO11.SA"
     ]
-]
 
 # =========================================================
 # FUNÇÕES
