@@ -163,7 +163,7 @@ def calcular_indicadores(df):
         window=169
     ).ema_indicator()
 
-    # DMI / ADX
+    # DMI
 
     adx = ta.trend.ADXIndicator(
         high=df["High"],
@@ -201,7 +201,7 @@ def calcular_indicadores(df):
 
 
 # =========================================================
-# TENDÊNCIA PRINCIPAL
+# TENDÊNCIA
 # =========================================================
 
 def tendencia_ok(df):
@@ -219,34 +219,6 @@ def tendencia_ok(df):
 
 
 # =========================================================
-# CONFIRMAÇÃO SEMANAL
-# =========================================================
-
-def tendencia_semanal_ok(df_diario):
-
-    semanal = df_diario.resample("W").agg({
-
-        "Open": "first",
-        "High": "max",
-        "Low": "min",
-        "Close": "last",
-        "Volume": "sum"
-
-    }).dropna()
-
-    semanal = calcular_indicadores(semanal)
-
-    if len(semanal) < 50:
-        return False
-
-    ultimo = semanal.iloc[-1]
-
-    return bool(
-        ultimo["DI_POS"] > ultimo["DI_NEG"]
-    )
-
-
-# =========================================================
 # VOLUME
 # =========================================================
 
@@ -260,7 +232,7 @@ def volume_ok(df):
 
 
 # =========================================================
-# SETUP PRINCIPAL
+# SETUP ORIGINAL (VERSÃO QUE FUNCIONAVA)
 # =========================================================
 
 def detectar_123_compra(df):
@@ -273,8 +245,8 @@ def detectar_123_compra(df):
     close = float(ultimo["Close"])
 
     ema9 = float(ultimo["EMA9"])
+
     ema29 = float(ultimo["EMA29"])
-    ema69 = float(ultimo["EMA69"])
 
     maxima_5 = float(
         df["High"].tail(5).max()
@@ -290,11 +262,9 @@ def detectar_123_compra(df):
 
         ema9 > ema29,
 
-        ema29 > ema69,
+        close >= maxima_5 * 0.99,
 
-        close >= maxima_5 * 0.995,
-
-        volume_rel > 0.8
+        volume_rel > 0.7
 
     ]
 
@@ -350,6 +320,7 @@ def backtest_probabilidade(df):
             )
 
             stop = entrada - atr
+
             alvo = entrada + (2 * atr)
 
             futuro = df.iloc[i:i + 15]
@@ -359,6 +330,7 @@ def backtest_probabilidade(df):
             for _, candle in futuro.iterrows():
 
                 low = float(candle["Low"])
+
                 high = float(candle["High"])
 
                 if low <= stop:
@@ -412,7 +384,9 @@ def gerar_score(probabilidade, vol_rel, expectativa):
     score = 0
 
     score += probabilidade * 0.5
+
     score += min(vol_rel * 10, 20)
+
     score += max(expectativa * 20, 0)
 
     return round(score, 2)
@@ -448,7 +422,7 @@ ATIVO:
 {linha['Ativo']}
 
 CLASSIFICAÇÃO:
-{classificar_score(linha['Score'])}
+{linha['Classificação']}
 
 SCORE:
 {linha['Score']}
@@ -459,10 +433,10 @@ PROBABILIDADE:
 EXPECTATIVA:
 {linha['Expectativa']}
 
-OCORRÊNCIAS HISTÓRICAS:
+OCORRÊNCIAS:
 {linha['Ocorrências']}
 
-GAINS ANTES DO STOP:
+GAINS:
 {linha['Gains']}
 
 ENTRADA:
@@ -479,9 +453,6 @@ ATR:
 
 VOLUME RELATIVO:
 {linha['Volume']}
-
-ESTRATÉGIA:
-EMA69 + BREAKOUT + DMI + ATR
 """
 
     return relatorio
@@ -559,14 +530,13 @@ st.title("SCANNER PROBABILÍSTICO B3")
 
 st.markdown("""
 
-### Estratégia Utilizada
+### Estratégia
 
 - EMA9
 - EMA29
 - EMA69
 - EMA169
 - DMI
-- Tendência semanal
 - Breakout probabilístico
 - Volume relativo
 - Stop = 1 ATR
@@ -626,8 +596,6 @@ if st.button("ESCANEAR MERCADO"):
             if len(df) < 200:
                 continue
 
-            # FILTROS
-
             if not tendencia_ok(df):
                 continue
 
@@ -637,16 +605,12 @@ if st.button("ESCANEAR MERCADO"):
             if not detectar_123_compra(df):
                 continue
 
-            # BACKTEST
-
             (
                 probabilidade,
                 ocorrencias,
                 gains,
                 expectativa
             ) = backtest_probabilidade(df)
-
-            # FILTRO MAIS FLEXÍVEL
 
             if ocorrencias < 2:
                 continue
@@ -741,10 +705,6 @@ if st.button("ESCANEAR MERCADO"):
 
     status.text("Análise concluída.")
 
-    # =====================================================
-    # RESULTADOS
-    # =====================================================
-
     if len(resultados) == 0:
 
         st.error(
@@ -810,9 +770,7 @@ if st.button("ESCANEAR MERCADO"):
 
                 st.divider()
 
-                col1, col2, col3 = (
-                    st.columns(3)
-                )
+                col1, col2, col3 = st.columns(3)
 
                 with col1:
 
@@ -824,11 +782,6 @@ if st.button("ESCANEAR MERCADO"):
                     st.metric(
                         "Expectativa",
                         linha['Expectativa']
-                    )
-
-                    st.metric(
-                        "Classificação",
-                        linha['Classificação']
                     )
 
                 with col2:
@@ -843,11 +796,6 @@ if st.button("ESCANEAR MERCADO"):
                         linha['Stop']
                     )
 
-                    st.metric(
-                        "ATR",
-                        linha['ATR']
-                    )
-
                 with col3:
 
                     st.metric(
@@ -856,24 +804,9 @@ if st.button("ESCANEAR MERCADO"):
                     )
 
                     st.metric(
-                        "Volume Relativo",
-                        linha['Volume']
-                    )
-
-                    st.metric(
                         "Score",
                         linha['Score']
                     )
-
-                st.write(
-                    f"Ocorrências históricas: "
-                    f"{linha['Ocorrências']}"
-                )
-
-                st.write(
-                    f"Gains antes do stop: "
-                    f"{linha['Gains']}"
-                )
 
                 fig = criar_grafico(
                     linha['Grafico'],
@@ -888,5 +821,5 @@ if st.button("ESCANEAR MERCADO"):
 st.divider()
 
 st.caption(
-    "Scanner Probabilístico B3 | EMA69 + ATR + Breakout"
+    "Scanner Probabilístico B3"
 )
