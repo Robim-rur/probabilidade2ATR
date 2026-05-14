@@ -21,6 +21,7 @@ st.set_page_config(
 
 ATIVOS = [
 
+    # FIIs
     "GARE11.SA",
     "HGLG11.SA",
     "XPLG11.SA",
@@ -66,6 +67,7 @@ ATIVOS = [
     "AUVP11.SA",
     "IEEX11.SA",
 
+    # Utilities
     "TAEE11.SA",
     "CMIG4.SA",
     "CPFE3.SA",
@@ -80,6 +82,7 @@ ATIVOS = [
     "SAPR11.SA",
     "CSMG3.SA",
 
+    # Bancos
     "BBAS3.SA",
     "ITUB4.SA",
     "ITSA4.SA",
@@ -89,6 +92,7 @@ ATIVOS = [
     "BPAC11.SA",
     "BRSR6.SA",
 
+    # Blue Chips
     "VALE3.SA",
     "PETR4.SA",
     "PETR3.SA",
@@ -103,6 +107,7 @@ ATIVOS = [
     "TOTS3.SA",
     "RAIL3.SA",
 
+    # BDRs
     "AAPL34.SA",
     "MSFT34.SA",
     "GOGL34.SA",
@@ -113,6 +118,7 @@ ATIVOS = [
     "DISB34.SA",
     "SBUX34.SA",
 
+    # ETFs
     "BOVA11.SA",
     "SMAL11.SA",
     "IVVB11.SA",
@@ -135,6 +141,8 @@ def calcular_indicadores(df):
 
     df = df.copy()
 
+    # EMAs
+
     df["EMA9"] = ta.trend.EMAIndicator(
         close=df["Close"],
         window=9
@@ -155,6 +163,8 @@ def calcular_indicadores(df):
         window=169
     ).ema_indicator()
 
+    # DMI / ADX
+
     adx = ta.trend.ADXIndicator(
         high=df["High"],
         low=df["Low"],
@@ -166,6 +176,8 @@ def calcular_indicadores(df):
     df["DI_NEG"] = adx.adx_neg()
     df["ADX"] = adx.adx()
 
+    # ATR
+
     atr = ta.volatility.AverageTrueRange(
         high=df["High"],
         low=df["Low"],
@@ -174,6 +186,8 @@ def calcular_indicadores(df):
     )
 
     df["ATR"] = atr.average_true_range()
+
+    # Volume
 
     df["VOL_MEDIA20"] = (
         df["Volume"].rolling(20).mean()
@@ -186,19 +200,27 @@ def calcular_indicadores(df):
     return df
 
 
+# =========================================================
+# TENDÊNCIA PRINCIPAL
+# =========================================================
+
 def tendencia_ok(df):
 
     ultimo = df.iloc[-1]
 
     condicao = (
 
-        (ultimo["Close"] > ultimo["EMA169"]) and
+        (ultimo["Close"] > ultimo["EMA69"]) and
         (ultimo["DI_POS"] > ultimo["DI_NEG"])
 
     )
 
     return bool(condicao)
 
+
+# =========================================================
+# CONFIRMAÇÃO SEMANAL
+# =========================================================
 
 def tendencia_semanal_ok(df_diario):
 
@@ -224,6 +246,10 @@ def tendencia_semanal_ok(df_diario):
     )
 
 
+# =========================================================
+# VOLUME
+# =========================================================
+
 def volume_ok(df):
 
     ultimo = df.iloc[-1]
@@ -232,8 +258,9 @@ def volume_ok(df):
         ultimo["VOL_REL"] > 0.8
     )
 
+
 # =========================================================
-# NOVO 1,2,3 INSTITUCIONAL
+# SETUP PRINCIPAL
 # =========================================================
 
 def detectar_123_compra(df):
@@ -274,6 +301,10 @@ def detectar_123_compra(df):
     return all(condicoes)
 
 
+# =========================================================
+# LIQUIDEZ
+# =========================================================
+
 def calcular_liquidez(df):
 
     financeiro = (
@@ -284,6 +315,10 @@ def calcular_liquidez(df):
         financeiro.tail(20).mean()
     )
 
+
+# =========================================================
+# BACKTEST
+# =========================================================
 
 def backtest_probabilidade(df):
 
@@ -368,6 +403,10 @@ def backtest_probabilidade(df):
     )
 
 
+# =========================================================
+# SCORE
+# =========================================================
+
 def gerar_score(probabilidade, vol_rel, expectativa):
 
     score = 0
@@ -392,6 +431,10 @@ def classificar_score(score):
 
     return "FRACO"
 
+
+# =========================================================
+# RELATÓRIO
+# =========================================================
 
 def criar_relatorio(linha):
 
@@ -438,11 +481,15 @@ VOLUME RELATIVO:
 {linha['Volume']}
 
 ESTRATÉGIA:
-EMA169 + DMI + ATR + BREAKOUT
+EMA69 + BREAKOUT + DMI + ATR
 """
 
     return relatorio
 
+
+# =========================================================
+# GRÁFICO
+# =========================================================
 
 def criar_grafico(df, ticker):
 
@@ -503,6 +550,7 @@ def criar_grafico(df, ticker):
 
     return fig
 
+
 # =========================================================
 # INTERFACE
 # =========================================================
@@ -517,7 +565,7 @@ st.markdown("""
 - EMA29
 - EMA69
 - EMA169
-- DMI (DI+ > DI−)
+- DMI
 - Tendência semanal
 - Breakout probabilístico
 - Volume relativo
@@ -526,6 +574,11 @@ st.markdown("""
 - Ranking probabilístico
 
 """)
+
+
+# =========================================================
+# BOTÃO
+# =========================================================
 
 if st.button("ESCANEAR MERCADO"):
 
@@ -558,7 +611,7 @@ if st.button("ESCANEAR MERCADO"):
 
             df = ajustar_colunas(df)
 
-            if len(df) < 300:
+            if len(df) < 250:
                 continue
 
             liquidez = calcular_liquidez(df)
@@ -570,13 +623,12 @@ if st.button("ESCANEAR MERCADO"):
 
             df.dropna(inplace=True)
 
-            if len(df) < 250:
+            if len(df) < 200:
                 continue
+
+            # FILTROS
 
             if not tendencia_ok(df):
-                continue
-
-            if not tendencia_semanal_ok(df):
                 continue
 
             if not volume_ok(df):
@@ -585,6 +637,8 @@ if st.button("ESCANEAR MERCADO"):
             if not detectar_123_compra(df):
                 continue
 
+            # BACKTEST
+
             (
                 probabilidade,
                 ocorrencias,
@@ -592,7 +646,9 @@ if st.button("ESCANEAR MERCADO"):
                 expectativa
             ) = backtest_probabilidade(df)
 
-            if ocorrencias < 3:
+            # FILTRO MAIS FLEXÍVEL
+
+            if ocorrencias < 2:
                 continue
 
             ultimo = df.iloc[-1]
@@ -684,6 +740,10 @@ if st.button("ESCANEAR MERCADO"):
         )
 
     status.text("Análise concluída.")
+
+    # =====================================================
+    # RESULTADOS
+    # =====================================================
 
     if len(resultados) == 0:
 
@@ -828,5 +888,5 @@ if st.button("ESCANEAR MERCADO"):
 st.divider()
 
 st.caption(
-    "Scanner Probabilístico B3 | EMA169 + ATR + Breakout"
+    "Scanner Probabilístico B3 | EMA69 + ATR + Breakout"
 )
