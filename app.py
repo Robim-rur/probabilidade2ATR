@@ -7,11 +7,11 @@ import plotly.graph_objects as go
 from datetime import datetime
 
 # =========================================================
-# CONFIGURAÇÃO
+# CONFIGURAÇÃO DA PÁGINA
 # =========================================================
 
 st.set_page_config(
-    page_title="Scanner Quantitativo B3",
+    page_title="Scanner Probabilístico B3",
     layout="wide"
 )
 
@@ -21,40 +21,106 @@ st.set_page_config(
 
 ATIVOS = [
 
-    "GARE11.SA","HGLG11.SA","XPLG11.SA","VILG11.SA",
-    "BRCO11.SA","BTLG11.SA","XPML11.SA","VISC11.SA",
-    "HSML11.SA","MALL11.SA","KNRI11.SA","JSRE11.SA",
-    "PVBI11.SA","HGRE11.SA","MXRF11.SA","KNCR11.SA",
-    "KNIP11.SA","CPTS11.SA","IRDM11.SA","TGAR11.SA",
-    "TRXF11.SA","HGRU11.SA","ALZR11.SA","XPCA11.SA",
-    "VGIA11.SA","RBRR11.SA","KNSC11.SA","HGCR11.SA",
-    "MCCI11.SA","RECR11.SA","VRTA11.SA","BCFF11.SA",
-    "HFOF11.SA","XPSF11.SA","RBRP11.SA","RBRF11.SA",
-    "RZTR11.SA","RURA11.SA","VGIR11.SA","CVBI11.SA",
-    "UTLL11.SA","GGRC11.SA","AUVP11.SA","IEEX11.SA",
+    "GARE11.SA",
+    "HGLG11.SA",
+    "XPLG11.SA",
+    "VILG11.SA",
+    "BRCO11.SA",
+    "BTLG11.SA",
+    "XPML11.SA",
+    "VISC11.SA",
+    "HSML11.SA",
+    "MALL11.SA",
+    "KNRI11.SA",
+    "JSRE11.SA",
+    "PVBI11.SA",
+    "HGRE11.SA",
+    "MXRF11.SA",
+    "KNCR11.SA",
+    "KNIP11.SA",
+    "CPTS11.SA",
+    "IRDM11.SA",
+    "TGAR11.SA",
+    "TRXF11.SA",
+    "HGRU11.SA",
+    "ALZR11.SA",
+    "XPCA11.SA",
+    "VGIA11.SA",
+    "RBRR11.SA",
+    "KNSC11.SA",
+    "HGCR11.SA",
+    "MCCI11.SA",
+    "RECR11.SA",
+    "VRTA11.SA",
+    "BCFF11.SA",
+    "HFOF11.SA",
+    "XPSF11.SA",
+    "RBRP11.SA",
+    "RBRF11.SA",
+    "RZTR11.SA",
+    "RURA11.SA",
+    "VGIR11.SA",
+    "CVBI11.SA",
+    "UTLL11.SA",
+    "GGRC11.SA",
+    "AUVP11.SA",
+    "IEEX11.SA",
 
-    "TAEE11.SA","CMIG4.SA","CPFE3.SA","EQTL3.SA",
-    "ELET3.SA","ELET6.SA","ALUP11.SA","TRPL4.SA",
-    "NEOE3.SA","ENGI11.SA","SBSP3.SA","SAPR11.SA",
+    "TAEE11.SA",
+    "CMIG4.SA",
+    "CPFE3.SA",
+    "EQTL3.SA",
+    "ELET3.SA",
+    "ELET6.SA",
+    "ALUP11.SA",
+    "TRPL4.SA",
+    "NEOE3.SA",
+    "ENGI11.SA",
+    "SBSP3.SA",
+    "SAPR11.SA",
     "CSMG3.SA",
 
-    "BBAS3.SA","ITUB4.SA","ITSA4.SA","BBDC4.SA",
-    "BBDC3.SA","SANB11.SA","BPAC11.SA","BRSR6.SA",
+    "BBAS3.SA",
+    "ITUB4.SA",
+    "ITSA4.SA",
+    "BBDC4.SA",
+    "BBDC3.SA",
+    "SANB11.SA",
+    "BPAC11.SA",
+    "BRSR6.SA",
 
-    "VALE3.SA","PETR4.SA","PETR3.SA","WEGE3.SA",
-    "SUZB3.SA","KLBN11.SA","JBSS3.SA","PRIO3.SA",
-    "RECV3.SA","EGIE3.SA","VIVT3.SA","TOTS3.SA",
+    "VALE3.SA",
+    "PETR4.SA",
+    "PETR3.SA",
+    "WEGE3.SA",
+    "SUZB3.SA",
+    "KLBN11.SA",
+    "JBSS3.SA",
+    "PRIO3.SA",
+    "RECV3.SA",
+    "EGIE3.SA",
+    "VIVT3.SA",
+    "TOTS3.SA",
     "RAIL3.SA",
 
-    "AAPL34.SA","MSFT34.SA","GOGL34.SA","AMZO34.SA",
-    "META34.SA","NVDC34.SA","JPMC34.SA","DISB34.SA",
+    "AAPL34.SA",
+    "MSFT34.SA",
+    "GOGL34.SA",
+    "AMZO34.SA",
+    "META34.SA",
+    "NVDC34.SA",
+    "JPMC34.SA",
+    "DISB34.SA",
     "SBUX34.SA",
 
-    "BOVA11.SA","SMAL11.SA","IVVB11.SA","DIVO11.SA"
+    "BOVA11.SA",
+    "SMAL11.SA",
+    "IVVB11.SA",
+    "DIVO11.SA"
 ]
 
 # =========================================================
-# AJUSTE COLUNAS
+# FUNÇÕES
 # =========================================================
 
 def ajustar_colunas(df):
@@ -64,9 +130,6 @@ def ajustar_colunas(df):
 
     return df
 
-# =========================================================
-# INDICADORES
-# =========================================================
 
 def calcular_indicadores(df):
 
@@ -122,52 +185,20 @@ def calcular_indicadores(df):
 
     return df
 
-# =========================================================
-# LIQUIDEZ
-# =========================================================
 
-def calcular_liquidez(df):
-
-    financeiro = (
-        df["Close"] * df["Volume"]
-    )
-
-    return float(
-        financeiro.tail(20).mean()
-    )
-
-# =========================================================
-# FILTROS
-# =========================================================
-
-def filtro_ema169(df):
+def tendencia_ok(df):
 
     ultimo = df.iloc[-1]
 
-    return bool(
-        ultimo["Close"] > ultimo["EMA169"]
+    condicao = (
+        (ultimo["Close"] > ultimo["EMA169"]) and
+        (ultimo["DI_POS"] > ultimo["DI_NEG"])
     )
 
-
-def filtro_volume(df):
-
-    ultimo = df.iloc[-1]
-
-    return bool(
-        ultimo["VOL_REL"] > 1
-    )
+    return bool(condicao)
 
 
-def filtro_dmi(df):
-
-    ultimo = df.iloc[-1]
-
-    return bool(
-        ultimo["DI_POS"] > ultimo["DI_NEG"]
-    )
-
-
-def filtro_semanal(df_diario):
+def tendencia_semanal_ok(df_diario):
 
     semanal = df_diario.resample("W").agg({
         "Open": "first",
@@ -179,20 +210,27 @@ def filtro_semanal(df_diario):
 
     semanal = calcular_indicadores(semanal)
 
-    if len(semanal) < 50:
+    if len(semanal) < 180:
         return False
 
     ultimo = semanal.iloc[-1]
 
-    return bool(
-        ultimo["DI_POS"] > ultimo["DI_NEG"]
+    condicao = (
+        (ultimo["Close"] > ultimo["EMA169"]) and
+        (ultimo["DI_POS"] > ultimo["DI_NEG"])
     )
 
-# =========================================================
-# SETUP 1 - 1,2,3
-# =========================================================
+    return bool(condicao)
 
-def setup_123(df):
+
+def volume_ok(df):
+
+    ultimo = df.iloc[-1]
+
+    return bool(ultimo["VOL_REL"] > 1)
+
+
+def detectar_123_compra(df):
 
     if len(df) < 30:
         return False
@@ -218,15 +256,20 @@ def setup_123(df):
         1
     )
 
+    if ponto2_idx <= ponto1_idx:
+        return False
+
     trecho3 = lows[ponto2_idx + 1:]
 
     if len(trecho3) < 3:
         return False
 
+    ponto3_rel = np.argmin(trecho3)
+
     ponto3_idx = (
         ponto2_idx +
         1 +
-        np.argmin(trecho3)
+        ponto3_rel
     )
 
     low1 = lows[ponto1_idx]
@@ -241,80 +284,23 @@ def setup_123(df):
         dados["Close"].iloc[-1]
     )
 
-    return bool(
-        fechamento > topo2
+    rompimento = fechamento > topo2
+
+    return bool(rompimento)
+
+
+def calcular_liquidez(df):
+
+    financeiro = (
+        df["Close"] * df["Volume"]
     )
 
-# =========================================================
-# SETUP 2 - MÉDIAS
-# =========================================================
-
-def setup_medias(df):
-
-    ultimo = df.iloc[-1]
-
-    alinhadas = (
-        ultimo["EMA9"] >
-        ultimo["EMA29"] >
-        ultimo["EMA69"] >
-        ultimo["EMA169"]
+    return float(
+        financeiro.tail(20).mean()
     )
 
-    max_5 = (
-        df["High"]
-        .shift(1)
-        .tail(5)
-        .max()
-    )
 
-    rompimento = (
-        ultimo["Close"] > max_5
-    )
-
-    return bool(
-        alinhadas and
-        rompimento
-    )
-
-# =========================================================
-# SETUP 3 - PULLBACK EMA9
-# =========================================================
-
-def setup_pullback_ema9(df):
-
-    if len(df) < 15:
-        return False
-
-    ultimo = df.iloc[-1]
-    anterior = df.iloc[-2]
-
-    alinhadas = (
-        ultimo["EMA9"] >
-        ultimo["EMA29"] >
-        ultimo["EMA69"] >
-        ultimo["EMA169"]
-    )
-
-    toque = (
-        anterior["Low"] <= anterior["EMA9"]
-    )
-
-    fechamento = (
-        ultimo["Close"] >
-        ultimo["EMA9"]
-    )
-
-    return bool(
-        alinhadas and
-        toque and
-        fechamento
-    )
-
-# =========================================================
-# BACKTEST
-# =========================================================
-
-def backtest(df, setup_func):
+def backtest_probabilidade(df):
 
     ocorrencias = 0
     gains = 0
@@ -326,7 +312,13 @@ def backtest(df, setup_func):
 
         try:
 
-            if not setup_func(trecho):
+            if not tendencia_ok(trecho):
+                continue
+
+            if not volume_ok(trecho):
+                continue
+
+            if not detectar_123_compra(trecho):
                 continue
 
             entrada = float(
@@ -357,7 +349,7 @@ def backtest(df, setup_func):
                     resultado = "gain"
                     break
 
-            if resultado:
+            if resultado is not None:
 
                 ocorrencias += 1
 
@@ -390,22 +382,19 @@ def backtest(df, setup_func):
         expectativa
     )
 
-# =========================================================
-# SCORE
-# =========================================================
 
-def gerar_score(probabilidade, volume, expectativa):
+def gerar_score(probabilidade, vol_rel, expectativa):
 
     score = 0
 
     score += probabilidade * 0.5
-    score += min(volume * 10, 20)
+    score += min(vol_rel * 10, 20)
     score += max(expectativa * 20, 0)
 
     return round(score, 2)
 
 
-def classificar(score):
+def classificar_score(score):
 
     if score >= 80:
         return "EXCELENTE"
@@ -418,23 +407,20 @@ def classificar(score):
 
     return "FRACO"
 
-# =========================================================
-# RELATÓRIO
-# =========================================================
 
-def criar_relatorio(linha, setup_nome):
+def criar_relatorio(linha):
 
-    return f"""
+    relatorio = f"""
 RELATÓRIO OPERACIONAL
 
-SETUP:
-{setup_nome}
+Data:
+{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
 
 ATIVO:
 {linha['Ativo']}
 
 CLASSIFICAÇÃO:
-{linha['Classificação']}
+{classificar_score(linha['Score'])}
 
 SCORE:
 {linha['Score']}
@@ -445,10 +431,10 @@ PROBABILIDADE:
 EXPECTATIVA:
 {linha['Expectativa']}
 
-OCORRÊNCIAS:
+OCORRÊNCIAS HISTÓRICAS:
 {linha['Ocorrências']}
 
-GAINS:
+GAINS ANTES DO STOP:
 {linha['Gains']}
 
 ENTRADA:
@@ -465,11 +451,13 @@ ATR:
 
 VOLUME RELATIVO:
 {linha['Volume']}
+
+ESTRATÉGIA:
+EMA169 + DMI + VOLUME + PADRÃO 1,2,3 + ATR
 """
 
-# =========================================================
-# GRÁFICO
-# =========================================================
+    return relatorio
+
 
 def criar_grafico(df, ticker):
 
@@ -486,16 +474,41 @@ def criar_grafico(df, ticker):
         )
     )
 
-    for ema in ["EMA9", "EMA29", "EMA69", "EMA169"]:
-
-        fig.add_trace(
-            go.Scatter(
-                x=df.index,
-                y=df[ema],
-                mode="lines",
-                name=ema
-            )
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["EMA9"],
+            mode="lines",
+            name="EMA9"
         )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["EMA29"],
+            mode="lines",
+            name="EMA29"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["EMA69"],
+            mode="lines",
+            name="EMA69"
+        )
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=df.index,
+            y=df["EMA169"],
+            mode="lines",
+            name="EMA169"
+        )
+    )
 
     fig.update_layout(
         title=ticker,
@@ -506,17 +519,30 @@ def criar_grafico(df, ticker):
     return fig
 
 # =========================================================
-# SCANNER
+# INTERFACE
 # =========================================================
 
-def executar_scanner(
-    nome_setup,
-    setup_func,
-    usar_ema169=False,
-    usar_volume=False,
-    usar_dmi=False,
-    usar_semanal=False
-):
+st.title("SCANNER PROBABILÍSTICO B3")
+
+st.markdown("""
+
+### Estratégia Utilizada
+
+- EMA9
+- EMA29
+- EMA69
+- EMA169
+- DMI (DI+ > DI−)
+- Tendência semanal confirmando
+- Padrão 1,2,3 de compra
+- Volume acima da média
+- Stop = 1 ATR
+- Alvo = 2 ATR
+- Ranking probabilístico
+
+""")
+
+if st.button("ESCANEAR MERCADO"):
 
     resultados = []
 
@@ -562,33 +588,16 @@ def executar_scanner(
             if len(df) < 250:
                 continue
 
-            # =====================================
-            # FILTROS INDEPENDENTES
-            # =====================================
+            if not tendencia_ok(df):
+                continue
 
-            if usar_ema169:
+            if not tendencia_semanal_ok(df):
+                continue
 
-                if not filtro_ema169(df):
-                    continue
+            if not volume_ok(df):
+                continue
 
-            if usar_volume:
-
-                if not filtro_volume(df):
-                    continue
-
-            if usar_dmi:
-
-                if not filtro_dmi(df):
-                    continue
-
-            if usar_semanal:
-
-                if not filtro_semanal(df):
-                    continue
-
-            # =====================================
-
-            if not setup_func(df):
+            if not detectar_123_compra(df):
                 continue
 
             (
@@ -596,12 +605,9 @@ def executar_scanner(
                 ocorrencias,
                 gains,
                 expectativa
-            ) = backtest(
-                df,
-                setup_func
-            )
+            ) = backtest_probabilidade(df)
 
-            if ocorrencias < 3:
+            if ocorrencias < 10:
                 continue
 
             ultimo = df.iloc[-1]
@@ -632,7 +638,7 @@ def executar_scanner(
                 expectativa
             )
 
-            classificacao = classificar(score)
+            classificacao = classificar_score(score)
 
             resultados.append({
 
@@ -679,6 +685,7 @@ def executar_scanner(
 
                 "Grafico":
                     df.tail(200)
+
             })
 
         except Exception as e:
@@ -695,232 +702,147 @@ def executar_scanner(
 
     if len(resultados) == 0:
 
-        st.warning(
+        st.error(
             "Nenhum ativo encontrado."
         )
 
-        return
+    else:
 
-    resultados_df = pd.DataFrame(
-        resultados
-    )
-
-    resultados_df = (
-        resultados_df
-        .sort_values(
-            by="Score",
-            ascending=False
+        resultados_df = pd.DataFrame(
+            resultados
         )
-        .reset_index(drop=True)
-    )
 
-    resultados_df.index += 1
+        resultados_df = (
+            resultados_df
+            .sort_values(
+                by="Score",
+                ascending=False
+            )
+            .reset_index(drop=True)
+        )
 
-    st.success(
-        f"{len(resultados_df)} ativos encontrados."
-    )
+        resultados_df.index += 1
 
-    tabela = resultados_df.drop(
-        columns=["Grafico"]
-    )
+        st.success(
+            f"{len(resultados_df)} ativos encontrados."
+        )
 
-    st.dataframe(
-        tabela,
-        use_container_width=True,
-        height=500
-    )
+        tabela = resultados_df.drop(
+            columns=["Grafico"]
+        )
 
-    st.divider()
+        st.dataframe(
+            tabela,
+            use_container_width=True,
+            height=500
+        )
 
-    for rank, linha in resultados_df.iterrows():
+        st.divider()
 
-        with st.expander(
-            f"#{rank} | "
-            f"{linha['Ativo']} | "
-            f"{linha['Classificação']} | "
-            f"Score {linha['Score']}"
+        st.subheader(
+            "DETALHAMENTO DOS ATIVOS"
+        )
+
+        for rank, linha in (
+            resultados_df.iterrows()
         ):
 
-            relatorio = criar_relatorio(
-                linha,
-                nome_setup
-            )
+            with st.expander(
+                f"#{rank} - "
+                f"{linha['Ativo']} | "
+                f"{linha['Classificação']} | "
+                f"Score {linha['Score']}"
+            ):
 
-            st.download_button(
-                label="📥 Baixar Relatório",
-                data=relatorio,
-                file_name=f"{linha['Ativo']}.txt",
-                mime="text/plain"
-            )
+                relatorio = criar_relatorio(linha)
 
-            col1, col2, col3 = st.columns(3)
-
-            with col1:
-
-                st.metric(
-                    "Probabilidade",
-                    f"{linha['Probabilidade']}%"
+                st.download_button(
+                    label="📥 Baixar Relatório",
+                    data=relatorio,
+                    file_name=f"{linha['Ativo']}_relatorio.txt",
+                    mime="text/plain"
                 )
 
-                st.metric(
-                    "Expectativa",
-                    linha['Expectativa']
+                st.divider()
+
+                col1, col2, col3 = (
+                    st.columns(3)
                 )
 
-                st.metric(
-                    "Classificação",
-                    linha['Classificação']
+                with col1:
+
+                    st.metric(
+                        "Probabilidade",
+                        f"{linha['Probabilidade']}%"
+                    )
+
+                    st.metric(
+                        "Expectativa",
+                        linha['Expectativa']
+                    )
+
+                    st.metric(
+                        "Classificação",
+                        linha['Classificação']
+                    )
+
+                with col2:
+
+                    st.metric(
+                        "Entrada",
+                        linha['Entrada']
+                    )
+
+                    st.metric(
+                        "Stop",
+                        linha['Stop']
+                    )
+
+                    st.metric(
+                        "ATR",
+                        linha['ATR']
+                    )
+
+                with col3:
+
+                    st.metric(
+                        "Alvo",
+                        linha['Alvo']
+                    )
+
+                    st.metric(
+                        "Volume Relativo",
+                        linha['Volume']
+                    )
+
+                    st.metric(
+                        "Score",
+                        linha['Score']
+                    )
+
+                st.write(
+                    f"Ocorrências históricas: "
+                    f"{linha['Ocorrências']}"
                 )
 
-            with col2:
-
-                st.metric(
-                    "Entrada",
-                    linha['Entrada']
+                st.write(
+                    f"Gains antes do stop: "
+                    f"{linha['Gains']}"
                 )
 
-                st.metric(
-                    "Stop",
-                    linha['Stop']
+                fig = criar_grafico(
+                    linha['Grafico'],
+                    linha['Ativo']
                 )
 
-                st.metric(
-                    "ATR",
-                    linha['ATR']
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
                 )
-
-            with col3:
-
-                st.metric(
-                    "Alvo",
-                    linha['Alvo']
-                )
-
-                st.metric(
-                    "Volume Relativo",
-                    linha['Volume']
-                )
-
-                st.metric(
-                    "Score",
-                    linha['Score']
-                )
-
-            st.write(
-                f"Ocorrências históricas: "
-                f"{linha['Ocorrências']}"
-            )
-
-            st.write(
-                f"Gains antes do stop: "
-                f"{linha['Gains']}"
-            )
-
-            fig = criar_grafico(
-                linha["Grafico"],
-                linha["Ativo"]
-            )
-
-            st.plotly_chart(
-                fig,
-                use_container_width=True
-            )
-
-# =========================================================
-# INTERFACE
-# =========================================================
-
-st.title(
-    "SCANNER QUANTITATIVO B3"
-)
-
-st.markdown("""
-### Plataforma Multi-Setups Probabilísticos
-""")
-
-aba1, aba2, aba3 = st.tabs([
-
-    "SETUP 1 - 1,2,3",
-    "SETUP 2 - MÉDIAS",
-    "SETUP 3 - PULLBACK EMA9"
-
-])
-
-# =========================================================
-# SETUP 1
-# MAIS FLEXÍVEL
-# =========================================================
-
-with aba1:
-
-    st.subheader(
-        "SETUP 1 - 1,2,3"
-    )
-
-    if st.button(
-        "ESCANEAR SETUP 1"
-    ):
-
-        executar_scanner(
-            nome_setup="1,2,3",
-            setup_func=setup_123,
-            usar_ema169=True,
-            usar_volume=False,
-            usar_dmi=False,
-            usar_semanal=False
-        )
-
-# =========================================================
-# SETUP 2
-# MAIS RÍGIDO
-# =========================================================
-
-with aba2:
-
-    st.subheader(
-        "SETUP 2 - MÉDIAS"
-    )
-
-    if st.button(
-        "ESCANEAR SETUP 2"
-    ):
-
-        executar_scanner(
-            nome_setup="MÉDIAS",
-            setup_func=setup_medias,
-            usar_ema169=True,
-            usar_volume=True,
-            usar_dmi=True,
-            usar_semanal=True
-        )
-
-# =========================================================
-# SETUP 3
-# INTERMEDIÁRIO
-# =========================================================
-
-with aba3:
-
-    st.subheader(
-        "SETUP 3 - PULLBACK EMA9"
-    )
-
-    if st.button(
-        "ESCANEAR SETUP 3"
-    ):
-
-        executar_scanner(
-            nome_setup="PULLBACK EMA9",
-            setup_func=setup_pullback_ema9,
-            usar_ema169=True,
-            usar_volume=True,
-            usar_dmi=False,
-            usar_semanal=False
-        )
 
 st.divider()
 
 st.caption(
-    "Scanner Quantitativo B3 "
-    "| Multi-Setups Probabilísticos"
+    "Scanner Probabilístico B3 "
+    "| EMA169 + DMI + ATR"
 )
