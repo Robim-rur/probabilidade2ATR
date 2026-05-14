@@ -120,7 +120,7 @@ ATIVOS = [
 ]
 
 # =========================================================
-# FUNÇÕES
+# AJUSTE COLUNAS
 # =========================================================
 
 def ajustar_colunas(df):
@@ -130,6 +130,9 @@ def ajustar_colunas(df):
 
     return df
 
+# =========================================================
+# INDICADORES
+# =========================================================
 
 def calcular_indicadores(df):
 
@@ -185,6 +188,9 @@ def calcular_indicadores(df):
 
     return df
 
+# =========================================================
+# LIQUIDEZ
+# =========================================================
 
 def calcular_liquidez(df):
 
@@ -196,6 +202,9 @@ def calcular_liquidez(df):
         financeiro.tail(20).mean()
     )
 
+# =========================================================
+# FILTROS
+# =========================================================
 
 def volume_ok(df):
 
@@ -228,19 +237,17 @@ def tendencia_semanal_ok(df_diario):
 
     semanal = calcular_indicadores(semanal)
 
-    if len(semanal) < 180:
+    if len(semanal) < 50:
         return False
 
     ultimo = semanal.iloc[-1]
 
     return bool(
-        (ultimo["Close"] > ultimo["EMA169"]) and
-        (ultimo["DI_POS"] > ultimo["DI_NEG"])
+        ultimo["DI_POS"] > ultimo["DI_NEG"]
     )
 
 # =========================================================
 # SETUP 1
-# 1,2,3 DE COMPRA
 # =========================================================
 
 def setup_123(df):
@@ -298,7 +305,6 @@ def setup_123(df):
 
 # =========================================================
 # SETUP 2
-# MÉDIAS ALINHADAS
 # =========================================================
 
 def setup_medias(df):
@@ -312,9 +318,15 @@ def setup_medias(df):
         ultimo["EMA169"]
     )
 
+    max_5 = (
+        df["High"]
+        .shift(1)
+        .tail(5)
+        .max()
+    )
+
     rompimento = (
-        ultimo["Close"] >
-        df["High"].tail(5).max()
+        ultimo["Close"] > max_5
     )
 
     return bool(
@@ -324,7 +336,6 @@ def setup_medias(df):
 
 # =========================================================
 # SETUP 3
-# PULLBACK EMA9
 # =========================================================
 
 def setup_pullback_ema9(df):
@@ -372,15 +383,6 @@ def backtest(df, func_setup):
         trecho = df.iloc[:i].copy()
 
         try:
-
-            if not tendencia_ok(trecho):
-                continue
-
-            if not tendencia_semanal_ok(trecho):
-                continue
-
-            if not volume_ok(trecho):
-                continue
 
             if not func_setup(trecho):
                 continue
@@ -630,7 +632,8 @@ def executar_scanner(nome_setup, func_setup):
                 expectativa
             ) = backtest(df, func_setup)
 
-            if ocorrencias < 10:
+            # FLEXIBILIZADO
+            if ocorrencias < 3:
                 continue
 
             ultimo = df.iloc[-1]
@@ -710,8 +713,11 @@ def executar_scanner(nome_setup, func_setup):
                     df.tail(200)
             })
 
-        except:
-            continue
+        except Exception as e:
+
+            st.warning(
+                f"Erro em {ticker}: {e}"
+            )
 
         progresso.progress(
             (i + 1) / total
@@ -917,6 +923,12 @@ with aba3:
             setup_pullback_ema9
         )
 
+st.divider()
+
+st.caption(
+    "Scanner Quantitativo B3 "
+    "| Multi-Setups Probabilísticos"
+)
 st.divider()
 
 st.caption(
