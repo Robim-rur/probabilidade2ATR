@@ -4,6 +4,7 @@ import numpy as np
 import yfinance as yf
 import ta
 import plotly.graph_objects as go
+from datetime import datetime
 
 # =========================================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -393,6 +394,71 @@ def gerar_score(probabilidade, vol_rel, expectativa):
     return round(score, 2)
 
 
+def classificar_score(score):
+
+    if score >= 80:
+        return "EXCELENTE"
+
+    elif score >= 65:
+        return "FORTE"
+
+    elif score >= 50:
+        return "MODERADO"
+
+    return "FRACO"
+
+
+def criar_relatorio(linha):
+
+    relatorio = f"""
+RELATÓRIO OPERACIONAL
+
+Data:
+{datetime.now().strftime('%d/%m/%Y %H:%M:%S')}
+
+ATIVO:
+{linha['Ativo']}
+
+CLASSIFICAÇÃO:
+{classificar_score(linha['Score'])}
+
+SCORE:
+{linha['Score']}
+
+PROBABILIDADE:
+{linha['Probabilidade']}%
+
+EXPECTATIVA:
+{linha['Expectativa']}
+
+OCORRÊNCIAS HISTÓRICAS:
+{linha['Ocorrências']}
+
+GAINS ANTES DO STOP:
+{linha['Gains']}
+
+ENTRADA:
+{linha['Entrada']}
+
+STOP:
+{linha['Stop']}
+
+ALVO:
+{linha['Alvo']}
+
+ATR:
+{linha['ATR']}
+
+VOLUME RELATIVO:
+{linha['Volume']}
+
+ESTRATÉGIA:
+EMA169 + DMI + VOLUME + PADRÃO 1,2,3 + ATR
+"""
+
+    return relatorio
+
+
 def criar_grafico(df, ticker):
 
     fig = go.Figure()
@@ -452,7 +518,6 @@ def criar_grafico(df, ticker):
 
     return fig
 
-
 # =========================================================
 # INTERFACE
 # =========================================================
@@ -463,6 +528,9 @@ st.markdown("""
 
 ### Estratégia Utilizada
 
+- EMA9
+- EMA29
+- EMA69
 - EMA169
 - DMI (DI+ > DI−)
 - Tendência semanal confirmando
@@ -570,6 +638,8 @@ if st.button("ESCANEAR MERCADO"):
                 expectativa
             )
 
+            classificacao = classificar_score(score)
+
             resultados.append({
 
                 "Ativo":
@@ -609,6 +679,9 @@ if st.button("ESCANEAR MERCADO"):
 
                 "Score":
                     score,
+
+                "Classificação":
+                    classificacao,
 
                 "Grafico":
                     df.tail(200)
@@ -677,8 +750,20 @@ if st.button("ESCANEAR MERCADO"):
             with st.expander(
                 f"#{rank} - "
                 f"{linha['Ativo']} | "
+                f"{linha['Classificação']} | "
                 f"Score {linha['Score']}"
             ):
+
+                relatorio = criar_relatorio(linha)
+
+                st.download_button(
+                    label="📥 Baixar Relatório",
+                    data=relatorio,
+                    file_name=f"{linha['Ativo']}_relatorio.txt",
+                    mime="text/plain"
+                )
+
+                st.divider()
 
                 col1, col2, col3 = (
                     st.columns(3)
@@ -696,6 +781,11 @@ if st.button("ESCANEAR MERCADO"):
                         linha['Expectativa']
                     )
 
+                    st.metric(
+                        "Classificação",
+                        linha['Classificação']
+                    )
+
                 with col2:
 
                     st.metric(
@@ -708,6 +798,11 @@ if st.button("ESCANEAR MERCADO"):
                         linha['Stop']
                     )
 
+                    st.metric(
+                        "ATR",
+                        linha['ATR']
+                    )
+
                 with col3:
 
                     st.metric(
@@ -718,6 +813,11 @@ if st.button("ESCANEAR MERCADO"):
                     st.metric(
                         "Volume Relativo",
                         linha['Volume']
+                    )
+
+                    st.metric(
+                        "Score",
+                        linha['Score']
                     )
 
                 st.write(
