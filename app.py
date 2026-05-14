@@ -198,36 +198,45 @@ def tendencia_ok(df):
     return bool(condicao)
 
 
+# =========================================================
+# AJUSTE SEMANAL SUAVIZADO
+# =========================================================
+
 def tendencia_semanal_ok(df_diario):
 
     semanal = df_diario.resample("W").agg({
+
         "Open": "first",
         "High": "max",
         "Low": "min",
         "Close": "last",
         "Volume": "sum"
+
     }).dropna()
 
     semanal = calcular_indicadores(semanal)
 
-    if len(semanal) < 180:
+    if len(semanal) < 50:
         return False
 
     ultimo = semanal.iloc[-1]
 
-    condicao = (
-        (ultimo["Close"] > ultimo["EMA169"]) and
-        (ultimo["DI_POS"] > ultimo["DI_NEG"])
+    return bool(
+        ultimo["DI_POS"] > ultimo["DI_NEG"]
     )
 
-    return bool(condicao)
 
+# =========================================================
+# AJUSTE VOLUME MAIS FLEXÍVEL
+# =========================================================
 
 def volume_ok(df):
 
     ultimo = df.iloc[-1]
 
-    return bool(ultimo["VOL_REL"] > 1)
+    return bool(
+        ultimo["VOL_REL"] > 0.8
+    )
 
 
 def detectar_123_compra(df):
@@ -533,9 +542,9 @@ st.markdown("""
 - EMA69
 - EMA169
 - DMI (DI+ > DI−)
-- Tendência semanal confirmando
+- Tendência semanal suavizada
 - Padrão 1,2,3 de compra
-- Volume acima da média
+- Volume flexível
 - Stop = 1 ATR
 - Alvo = 2 ATR
 - Ranking probabilístico
@@ -607,7 +616,11 @@ if st.button("ESCANEAR MERCADO"):
                 expectativa
             ) = backtest_probabilidade(df)
 
-            if ocorrencias < 10:
+            # =====================================================
+            # AJUSTADO DE 10 PARA 3
+            # =====================================================
+
+            if ocorrencias < 3:
                 continue
 
             ultimo = df.iloc[-1]
