@@ -117,12 +117,21 @@ ATIVOS = [
     "JPMC34.SA",
     "DISB34.SA",
     "SBUX34.SA",
+    "C2OL34.SA"
+    "TSLA34.SA",
 
     # ETFs
     "BOVA11.SA",
     "SMAL11.SA",
     "IVVB11.SA",
-    "DIVO11.SA"
+    "DIVO11.SA",
+    "HASH11.SA",
+    "GOLD11.SA",
+    "NDIV11.SA",
+    "SPUB11.SA",
+    "VWRA11.SA",
+    "GARE11.SA",
+    "UTLL11.SA"
 ]
 
 # =========================================================
