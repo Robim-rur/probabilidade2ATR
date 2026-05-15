@@ -163,7 +163,7 @@ def calcular_indicadores(df):
         window=169
     ).ema_indicator()
 
-    # DMI
+    # DMI / ADX
 
     adx = ta.trend.ADXIndicator(
         high=df["High"],
@@ -227,12 +227,12 @@ def volume_ok(df):
     ultimo = df.iloc[-1]
 
     return bool(
-        ultimo["VOL_REL"] > 0.8
+        ultimo["VOL_REL"] > 0.7
     )
 
 
 # =========================================================
-# SETUP ORIGINAL (VERSÃO QUE FUNCIONAVA)
+# SETUP ORIGINAL CORRIGIDO
 # =========================================================
 
 def detectar_123_compra(df):
@@ -248,10 +248,6 @@ def detectar_123_compra(df):
 
     ema29 = float(ultimo["EMA29"])
 
-    maxima_5 = float(
-        df["High"].tail(5).max()
-    )
-
     volume_rel = float(
         ultimo["VOL_REL"]
     )
@@ -261,8 +257,6 @@ def detectar_123_compra(df):
         close > ema9,
 
         ema9 > ema29,
-
-        close >= maxima_5 * 0.99,
 
         volume_rel > 0.7
 
@@ -530,14 +524,13 @@ st.title("SCANNER PROBABILÍSTICO B3")
 
 st.markdown("""
 
-### Estratégia
+### Estratégia Utilizada
 
 - EMA9
 - EMA29
 - EMA69
 - EMA169
 - DMI
-- Breakout probabilístico
 - Volume relativo
 - Stop = 1 ATR
 - Alvo = 2 ATR
